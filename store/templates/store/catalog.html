@@ -1,0 +1,30 @@
+{% extends 'store/base.html' %}
+
+{% block title %}Каталог — {{ site.shop_name|default:"СтройМаг" }}{% endblock %}
+
+{% block content %}
+<div class="eyebrow mb-1">Весь ассортимент</div>
+<h1 class="section-title mb-4">Каталог</h1>
+
+{% if categories %}
+<div class="cat-grid mb-5">
+    {% for cat in categories %}
+    <a href="{% url 'category_detail' cat.slug %}" class="cat-card">
+        <span class="cat-card__icon"><i class="fas {{ cat.icon|default:'fa-box' }}"></i></span>
+        <span>{{ cat.name }}</span>
+    </a>
+    {% endfor %}
+</div>
+{% endif %}
+
+<h2 class="section-title mb-4">Все товары</h2>
+{% include 'store/_browse_controls.html' %}
+<div class="product-grid">
+    {% for product in products %}
+        {% include 'store/_product_card.html' with product=product %}
+    {% empty %}
+        <p class="text-muted">Ничего не найдено по выбранным фильтрам.</p>
+    {% endfor %}
+</div>
+{% include 'store/_pager.html' %}
+{% endblock %}

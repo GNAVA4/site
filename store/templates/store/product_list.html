@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Магазин Строитель</title>
+    <style>
+        /* Временно добавим немного стилей прямо сюда */
+        body { font-family: sans-serif; padding: 20px; }
+        .product-card { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 8px; max-width: 300px;}
+        .price { font-weight: bold; color: green; }
+        img { max-width: 100%; height: auto; }
+    </style>
+</head>
+<body>
+
+    <h1>Каталог товаров</h1>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 20px;">
+        {% for product in products %}
+            <div class="product-card">
+                {% if product.image %}
+                    <img src="{{ product.image.url }}" alt="{{ product.title }}">
+                {% endif %}
+                <h3>{{ product.title }}</h3>
+                <p>Розница: <span class="price">{{ product.price_retail }} ₽</span></p>
+                <p>Опт: <span class="price">{{ product.price_wholesale }} ₽</span></p>
+                <hr>
+                <p>{{ product.description|truncatewords:20 }}</p>
+            </div>
+        {% empty %}
+            <p>Товаров пока нет. Зайдите в админку и добавьте их!</p>
+        {% endfor %}
+    </div>
+
+</body>
+</html>

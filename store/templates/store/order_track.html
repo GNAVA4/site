@@ -1,0 +1,59 @@
+{% extends 'store/base.html' %}
+
+{% block title %}Проверить заказ — {{ site.shop_name|default:"СтройМаг" }}{% endblock %}
+
+{% block content %}
+<div class="eyebrow mb-1">Отслеживание</div>
+<h1 class="section-title mb-4">Проверить заказ</h1>
+
+<div class="row g-4">
+    <!-- Форма поиска -->
+    <div class="col-lg-5">
+        <form method="POST" class="surface p-4">
+            {% csrf_token %}
+            <p class="text-muted">Введите номер заказа и код — мы показывали их после оформления
+                (и в тексте заказа).</p>
+            <div class="mb-3">
+                <label class="form-label">Номер заказа</label>
+                <input type="text" name="number" value="{{ number }}" class="form-control" inputmode="numeric" placeholder="например 12">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Код заказа</label>
+                <input type="text" name="code" value="{{ code }}" class="form-control" placeholder="например ABCD2345" style="text-transform:uppercase;">
+            </div>
+            <button type="submit" class="btn-x btn-x--lg btn-x--block"><i class="fas fa-magnifying-glass"></i> Найти заказ</button>
+        </form>
+    </div>
+
+    <!-- Результат -->
+    <div class="col-lg-7">
+        {% if error %}
+            <div class="alert alert-danger"><i class="fas fa-circle-exclamation"></i> {{ error }}</div>
+        {% endif %}
+
+        {% if order %}
+        <div class="surface p-4">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+                <h2 class="h4 fw-bold mb-0">Заказ #{{ order.pk }}</h2>
+                <span class="chip">{{ order.get_status_display }}</span>
+            </div>
+            <div class="text-muted small mb-3">Оформлен: {{ order.created_at|date:"d.m.Y H:i" }} · Способ связи: {{ order.get_contact_method_display }}</div>
+
+            <ul class="list-group list-group-flush mb-3">
+                {% for item in order.items.all %}
+                <li class="list-group-item px-0 d-flex justify-content-between" style="background:transparent;">
+                    <span>{{ item.product_title }} <small class="text-muted">({{ item.size }}) ×{{ item.quantity }}</small></span>
+                    <span class="fw-bold text-nowrap">{{ item.sum_retail }} ₽</span>
+                </li>
+                {% endfor %}
+            </ul>
+            <div class="d-flex justify-content-between fs-5">
+                <span class="fw-bold">Итого:</span>
+                <span class="price">{{ order.total_retail }} ₽</span>
+            </div>
+            <div class="d-flex justify-content-between text-muted small"><span>Опт:</span><span>{{ order.total_wholesale }} ₽</span></div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

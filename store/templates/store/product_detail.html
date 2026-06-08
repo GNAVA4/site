@@ -1,0 +1,123 @@
+{% extends 'store/base.html' %}
+
+{% block title %}{{ product.title }} — {{ site.shop_name|default:"СтройМаг" }}{% endblock %}
+
+{% block content %}
+<nav class="mb-3" style="font-size:.9rem;">
+    <a href="{% url 'home' %}" class="text-muted">Главная</a>
+    <span class="text-muted"> / </span>
+    <a href="{% url 'category_detail' product.category.slug %}" class="text-muted">{{ product.category.name }}</a>
+    <span class="text-muted"> / </span>
+    <span>{{ product.title }}</span>
+</nav>
+
+<div class="row g-4 g-lg-5">
+    <!-- Фото -->
+    <div class="col-lg-6">
+        {% with gallery=product.gallery %}
+        {% if gallery|length > 1 %}
+            <div id="productGallery" class="carousel slide product-gallery">
+                <div class="carousel-inner surface p-2">
+                    {% for img in gallery %}
+                    <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                        <div class="pg-slide"><img src="{{ img.url }}" alt="{{ product.title }}"></div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#productGallery" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span><span class="visually-hidden">Назад</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#productGallery" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span><span class="visually-hidden">Вперёд</span>
+                </button>
+            </div>
+            <div class="pg-thumbs">
+                {% for img in gallery %}
+                <button type="button" data-bs-target="#productGallery" data-bs-slide-to="{{ forloop.counter0 }}" class="{% if forloop.first %}active{% endif %}" aria-label="Фото {{ forloop.counter }}">
+                    <img src="{{ img.url }}" alt="">
+                </button>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="surface p-2 pg-single">
+                {% if product.image %}
+                    <img src="{{ product.image.url }}" alt="{{ product.title }}">
+                {% else %}
+                    <i class="fas fa-image text-muted" style="font-size:3rem;"></i>
+                {% endif %}
+            </div>
+        {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Инфо -->
+    <div class="col-lg-6">
+        <h1 style="font-size:clamp(1.6rem,4vw,2.3rem);">{{ product.title }}</h1>
+        <div class="d-flex gap-2 my-3 flex-wrap align-items-center">
+            {% if product.is_hit %}<span class="badge-pill badge-hit"><i class="fas fa-fire"></i> Хит</span>{% endif %}
+            {% if product.stock > 0 and product.stock <= site.low_stock_threshold %}<span class="badge-pill badge-low">Мало осталось</span>{% endif %}
+            <span class="chip"><i class="fas fa-eye"></i> {{ product.views }}</span>
+            {% if product.stock > 0 %}
+                <span class="chip" style="color:var(--ok);"><i class="fas fa-check"></i> В наличии: {{ product.stock }}</span>
+            {% else %}
+                <span class="chip" style="color:#dc2626;"><i class="fas fa-xmark"></i> Нет в наличии</span>
+            {% endif %}
+        </div>
+
+        <div class="surface p-4 my-4" style="box-shadow:none;background:var(--surface);">
+            <div class="d-flex align-items-baseline gap-2 flex-wrap">
+                <span class="price" style="font-size:2rem;">{{ product.current_retail }} ₽</span>
+                {% if product.retail_discounted %}
+                    <span class="price-old" style="font-size:1.2rem;">{{ product.price_retail }} ₽</span>
+                    <span class="badge-pill badge-disc">−{{ product.effective_discount_percent }}%</span>
+                {% endif %}
+                <span class="text-muted">розница</span>
+            </div>
+            <div class="d-flex align-items-baseline gap-2 mt-1 flex-wrap">
+                <span class="fw-bold" style="font-size:1.2rem;">{{ product.current_wholesale }} ₽</span>
+                {% if product.wholesale_discounted %}<span class="price-old">{{ product.price_wholesale }} ₽</span>{% endif %}
+                <span class="text-muted">опт (уточняйте у менеджера)</span>
+            </div>
+        </div>
+
+        {% if product.description %}<div class="mb-4">{{ product.description|linebreaks }}</div>{% endif %}
+
+        <!-- Форма покупки -->
+        <form id="buyForm" action="{% url 'add_to_cart' product.pk %}" method="POST" class="surface p-3 js-add">
+            {% csrf_token %}
+            {% if product.sizes.all %}
+                <div class="mb-3">
+                    <label class="form-label">Размер / вариант</label>
+                    <select name="size" class="size-select" style="max-width:280px;">
+                        {% for size in product.sizes.all %}<option value="{{ size.size_value }}">{{ size.size_value }}</option>{% endfor %}
+                    </select>
+                </div>
+            {% endif %}
+            <label class="form-label">Количество</label>
+            <div class="d-flex align-items-center gap-3">
+                <div class="stepper">
+                    <button type="button" data-dir="-1" aria-label="минус">−</button>
+                    <input type="number" class="qty-input" name="quantity" value="1" min="1" max="{{ product.stock|default:1 }}" {% if product.stock < 1 %}disabled{% endif %}>
+                    <button type="button" data-dir="1" aria-label="плюс">+</button>
+                </div>
+                <button type="submit" class="btn-x btn-x--lg" style="flex:1;" {% if product.stock < 1 %}disabled{% endif %}>
+                    <i class="fas fa-cart-plus"></i> Добавить в корзину
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Похожие товары -->
+{% if similar %}
+<section class="mt-5">
+    <h2 class="section-title mb-4">С этим покупают</h2>
+    <div class="product-grid">
+        {% for product in similar %}
+            {% include 'store/_product_card.html' with product=product %}
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,114 @@
+{% extends 'store/base.html' %}
+
+{% block content %}
+
+<!-- Hero -->
+<section class="hero mb-4" {% if site.hero_image %}style="background-image:linear-gradient(100deg, rgba(17,24,39,.85) 0%, rgba(17,24,39,.5) 48%, rgba(17,24,39,.12) 100%), url('{{ site.hero_image.url }}');background-size:cover;background-position:center;"{% endif %}>
+    <div class="hero__accent"></div>
+    <div class="eyebrow mb-2" style="color:#fff;opacity:.85;">Оптом и в розницу · Самовывоз</div>
+    <h1>{{ site.hero_title|default:"Всё для строителей и бытовок" }}</h1>
+    <p class="mt-3">{{ site.hero_subtitle|default:"Матрасы, подушки, одеяла, спецодежда. Качество со склада." }}</p>
+    <div class="d-flex flex-wrap gap-2 mt-4">
+        <a href="{% url 'catalog' %}" class="btn-x btn-x--lg"><i class="fas fa-layer-group"></i> Открыть каталог</a>
+        <a href="#popular" class="btn-x btn-x--lg btn-x--line"><i class="fas fa-fire"></i> Хиты продаж</a>
+    </div>
+</section>
+
+<!-- Преимущества -->
+<div class="benefits mb-5">
+    <div class="benefit"><span class="benefit__i"><i class="fas fa-truck-ramp-box"></i></span><div><b>Самовывоз</b><span>со склада в день заказа</span></div></div>
+    <div class="benefit"><span class="benefit__i"><i class="fas fa-tags"></i></span><div><b>Опт и розница</b><span>выгодные цены</span></div></div>
+    <div class="benefit"><span class="benefit__i"><i class="fas fa-layer-group"></i></span><div><b>Большой выбор</b><span>матрасы, текстиль, спецодежда</span></div></div>
+    <div class="benefit"><span class="benefit__i"><i class="fas fa-shield-halved"></i></span><div><b>Гарантия</b><span>качество проверено</span></div></div>
+</div>
+
+<!-- Акции (слайдер) -->
+{% if banners %}
+<div id="promoCarousel" class="carousel slide mb-5" data-bs-ride="carousel" style="border-radius:18px;overflow:hidden;box-shadow:var(--shadow);">
+    <div class="carousel-inner">
+        {% for promo in banners %}
+        <div class="carousel-item {% if forloop.first %}active{% endif %}">
+            <div class="promo-slide">
+                {% if promo.image %}
+                    <img src="{{ promo.image.url }}" alt="{{ promo.title }}">
+                {% endif %}
+                <div class="promo-slide__cap">
+                    <h2 style="color:#fff;">{{ promo.title }}</h2>
+                    <p class="mb-0" style="color:rgba(255,255,255,.9);">{{ promo.text }}</p>
+                </div>
+                {% if promo.link %}<a href="{{ promo.link }}" class="stretched-link" aria-label="{{ promo.title }}"></a>{% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% if banners.count > 1 %}
+    <button class="carousel-control-prev" type="button" data-bs-target="#promoCarousel" data-bs-slide="prev"><span class="carousel-control-prev-icon"></span></button>
+    <button class="carousel-control-next" type="button" data-bs-target="#promoCarousel" data-bs-slide="next"><span class="carousel-control-next-icon"></span></button>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- Категории -->
+{% if categories %}
+<div class="mb-4">
+    <div class="eyebrow mb-1">Каталог</div>
+    <h2 class="section-title mb-3">Категории</h2>
+    <div class="cat-grid">
+        {% for cat in categories %}
+        <a href="{% url 'category_detail' cat.slug %}" class="cat-card">
+            <span class="cat-card__icon"><i class="fas {{ cat.icon|default:'fa-box' }}"></i></span>
+            <span>{{ cat.name }}</span>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Популярные товары -->
+<div id="popular" class="d-flex align-items-end justify-content-between mb-4 mt-5">
+    <div>
+        <div class="eyebrow mb-1">Хиты продаж</div>
+        <h2 class="section-title">Популярные товары</h2>
+    </div>
+</div>
+
+<div class="product-grid">
+    {% for product in popular_products %}
+        {% include 'store/_product_card.html' with product=product %}
+    {% empty %}
+        <p class="text-muted">Товары скоро появятся.</p>
+    {% endfor %}
+</div>
+
+<!-- FAQ -->
+<section class="mt-5">
+    <div class="eyebrow mb-1">Вопрос-ответ</div>
+    <h2 class="section-title mb-4">Частые вопросы</h2>
+    <div class="accordion" id="faqAccordion">
+        {% for q, a in faq %}
+        <div class="accordion-item surface mb-2" style="border-radius:14px;overflow:hidden;">
+            <h3 class="accordion-header">
+                <button class="accordion-button {% if not forloop.first %}collapsed{% endif %} fw-bold" type="button"
+                        data-bs-toggle="collapse" data-bs-target="#faq{{ forloop.counter }}">
+                    {{ q }}
+                </button>
+            </h3>
+            <div id="faq{{ forloop.counter }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" data-bs-parent="#faqAccordion">
+                <div class="accordion-body text-muted">{{ a }}</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- CTA-полоса -->
+<section class="cta-band mt-5 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+    <div class="cta-band__deco"><i class="fas fa-hard-hat"></i></div>
+    <div style="position:relative;z-index:1;">
+        <h2 class="fw-bold mb-2">Нужен опт или совет по выбору?</h2>
+        <p>Напишите менеджеру — подберём товар и рассчитаем оптовую цену.</p>
+    </div>
+    <a href="{% url 'contacts' %}" class="btn-x btn-x--lg btn-x--line" style="position:relative;z-index:1;flex:none;"><i class="fas fa-headset"></i> Связаться</a>
+</section>
+
+{% endblock %}

@@ -1,0 +1,64 @@
+{% extends 'store/base.html' %}
+
+{% block title %}Контакты — {{ site.shop_name|default:"СтройМаг" }}{% endblock %}
+
+{% block content %}
+<div class="eyebrow mb-1">Свяжитесь с нами</div>
+<h1 class="section-title mb-4">Контакты</h1>
+
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="surface p-4 h-100">
+            {% if site.address %}
+            <h3 class="h5"><i class="fas fa-location-dot" style="color:var(--accent);"></i> Адрес</h3>
+            <p class="mb-4">{{ site.address }}</p>
+            {% endif %}
+
+            <h3 class="h5"><i class="fas fa-headset" style="color:var(--accent);"></i> Связь</h3>
+            <div class="d-grid gap-2" style="max-width:340px;">
+                {% if site.phone %}<a href="tel:{{ site.phone }}" class="btn-x btn-x--line"><i class="fas fa-phone"></i> {{ site.phone }}</a>{% endif %}
+                {% if site.telegram_username %}<a href="https://t.me/{{ site.telegram_username }}" target="_blank" class="btn-x btn-x--line"><i class="fab fa-telegram-plane"></i> Telegram</a>{% endif %}
+                {% if site.whatsapp_phone %}<a href="https://wa.me/{{ site.whatsapp_phone }}" target="_blank" class="btn-x btn-x--line"><i class="fab fa-whatsapp"></i> WhatsApp</a>{% endif %}
+                {% if site.email %}<a href="mailto:{{ site.email }}" class="btn-x btn-x--line"><i class="fas fa-envelope"></i> {{ site.email }}</a>{% endif %}
+            </div>
+
+            {% if site.working_hours %}
+            <h3 class="h5 mt-4"><i class="fas fa-clock" style="color:var(--accent);"></i> Часы работы</h3>
+            <p class="mb-0">{{ site.working_hours }}</p>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-md-6">
+        {% if site.map_lat and site.map_lon %}
+        <div class="d-flex flex-column gap-2" style="height:100%;">
+            <div class="surface overflow-hidden flex-grow-1" style="position:relative;min-height:320px;padding:0;">
+                <iframe class="map-frame"
+                    src="https://yandex.ru/map-widget/v1/?ll={{ site.map_lon }},{{ site.map_lat }}&z=17&pt={{ site.map_lon }},{{ site.map_lat }},pm2rdm"
+                    width="100%" height="100%" frameborder="0"
+                    style="position:relative;min-height:320px;border:0;" loading="lazy"
+                    title="Карта проезда"></iframe>
+                <!-- Ссылка поверх карты: открывает полные Яндекс.Карты (iframe тапы не ловит) -->
+                <a href="https://yandex.ru/maps/?ll={{ site.map_lon }},{{ site.map_lat }}&z=17&pt={{ site.map_lon }},{{ site.map_lat }},pm2rdm"
+                   target="_blank" rel="noopener" class="stretched-link" aria-label="Открыть карту в Яндекс.Картах"></a>
+            </div>
+            <a href="https://yandex.ru/maps/?rtext=~{{ site.map_lat }},{{ site.map_lon }}&rtt=auto"
+               target="_blank" rel="noopener" class="btn-x btn-x--block">
+                <i class="fas fa-route"></i> Проложить маршрут
+            </a>
+        </div>
+        {% elif site.address %}
+        <div class="surface overflow-hidden" style="height:100%;min-height:340px;padding:0;">
+            <iframe
+                src="https://yandex.ru/map-widget/v1/?mode=search&text={{ site.address|urlencode }}&z=16"
+                width="100%" height="100%" frameborder="0" allowfullscreen="true"
+                style="position:relative;min-height:340px;border:0;" loading="lazy"
+                title="Карта проезда"></iframe>
+        </div>
+        {% else %}
+        <div class="surface d-flex align-items-center justify-content-center text-muted" style="height:100%;min-height:300px;background:var(--surface);box-shadow:none;">
+            <span><i class="fas fa-map"></i> Адрес не указан в настройках</span>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

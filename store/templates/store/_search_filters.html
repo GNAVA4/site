@@ -1,0 +1,52 @@
+{# Расширенные фильтры поиска: на ПК — панель, на телефоне — выезжающая offcanvas. #}
+<button class="btn-x btn-x--line d-lg-none mb-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#searchFilters" aria-controls="searchFilters">
+    <i class="fas fa-sliders"></i> Фильтры{% if active_filters %} <span class="filter-count">{{ active_filters }}</span>{% endif %}
+</button>
+
+<form method="get" class="filters offcanvas-lg offcanvas-end mb-4" tabindex="-1" id="searchFilters" aria-labelledby="sfTitle">
+    <div class="offcanvas-header d-lg-none">
+        <h5 class="offcanvas-title" id="sfTitle"><i class="fas fa-sliders"></i> Фильтры</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#searchFilters" aria-label="Закрыть"></button>
+    </div>
+    <div class="offcanvas-body">
+        {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+
+        <label class="f-field">
+            <span class="f-label">Сортировка</span>
+            <select name="sort" class="form-select">
+                {% if allow_relevance %}<option value="relevance" {% if sort == 'relevance' %}selected{% endif %}>По релевантности</option>{% endif %}
+                {% for val, opt in sorts.items %}<option value="{{ val }}" {% if val == sort %}selected{% endif %}>{{ opt.1 }}</option>{% endfor %}
+            </select>
+        </label>
+
+        <label class="f-field">
+            <span class="f-label">Категория</span>
+            <select name="category" class="form-select">
+                <option value="">Все категории</option>
+                {% for c in categories %}<option value="{{ c.slug }}" {% if c.slug == f_category %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+            </select>
+        </label>
+
+        <div class="f-field">
+            <span class="f-label">Цена, ₽</span>
+            <span class="f-price">
+                <input type="number" name="min" value="{{ f_min }}" placeholder="от" class="form-control" min="0" inputmode="numeric">
+                <input type="number" name="max" value="{{ f_max }}" placeholder="до" class="form-control" min="0" inputmode="numeric">
+            </span>
+        </div>
+
+        <div class="f-field">
+            <span class="f-label">Показывать</span>
+            <div class="f-checks">
+                <label class="bc-check"><input type="checkbox" name="instock" value="1" {% if f_instock %}checked{% endif %}> В наличии</label>
+                <label class="bc-check"><input type="checkbox" name="sale" value="1" {% if f_sale %}checked{% endif %}> Со скидкой</label>
+                <label class="bc-check"><input type="checkbox" name="hit" value="1" {% if f_hit %}checked{% endif %}> Хиты</label>
+            </div>
+        </div>
+
+        <div class="f-actions">
+            <button type="submit" class="btn-x"><i class="fas fa-check"></i> Применить</button>
+            {% if active_filters %}<a href="?q={{ query|urlencode }}" class="btn-x btn-x--line">Сбросить</a>{% endif %}
+        </div>
+    </div>
+</form>

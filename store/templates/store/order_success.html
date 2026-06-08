@@ -1,0 +1,53 @@
+{% extends 'store/base.html' %}
+
+{% block title %}Заказ оформлен — {{ site.shop_name|default:"СтройМаг" }}{% endblock %}
+
+{% block content %}
+<div class="text-center py-4">
+    <div style="font-size:4rem;color:var(--ok);"><i class="fas fa-circle-check"></i></div>
+    <h1 class="section-title mt-2">Заказ #{{ order.pk }} принят</h1>
+    <p class="text-muted">Спасибо, {{ order.customer_name }}! Заказ сохранён.</p>
+</div>
+
+<!-- Код для проверки заказа -->
+<div class="surface p-3 mx-auto mb-3 text-center" style="max-width:540px;">
+    <div class="text-muted small mb-1">Сохраните данные для проверки статуса заказа:</div>
+    <div class="fw-bold" style="font-size:1.05rem;">Заказ № {{ order.pk }} · код <span class="font-head" style="letter-spacing:1px;color:var(--accent);">{{ order.code }}</span></div>
+    <a href="{% url 'track_order' %}?number={{ order.pk }}&code={{ order.code }}" class="btn-x btn-x--soft mt-2"><i class="fas fa-magnifying-glass"></i> Проверить заказ</a>
+</div>
+
+<div class="surface p-4 mx-auto" style="max-width:540px;">
+    {% if order.contact_method == 'telegram' and action_link %}
+        <p>Нажмите кнопку — откроется чат менеджера с готовым текстом заказа:</p>
+        <a href="{{ action_link }}" target="_blank" class="btn-x btn-x--lg btn-x--block" style="--accent:#229ED9;"><i class="fab fa-telegram-plane"></i> Отправить в Telegram</a>
+
+    {% elif order.contact_method == 'whatsapp' and action_link %}
+        <p>Нажмите кнопку — откроется WhatsApp с готовым текстом заказа:</p>
+        <a href="{{ action_link }}" target="_blank" class="btn-x btn-x--lg btn-x--block" style="--accent:#25D366;"><i class="fab fa-whatsapp"></i> Отправить в WhatsApp</a>
+
+    {% elif order.contact_method == 'email' and action_link %}
+        <p>Нажмите кнопку — откроется ваша почта с готовым письмом на адрес магазина:</p>
+        <a href="{{ action_link }}" class="btn-x btn-x--lg btn-x--block" style="--accent:#ea4335;"><i class="fas fa-envelope"></i> Открыть почту</a>
+        <p class="text-muted small mt-2 mb-0">Копия заказа уже у магазина — ничего не потеряется.</p>
+
+    {% elif order.contact_method == 'callback' %}
+        <p class="mb-0"><i class="fas fa-phone-volume" style="color:var(--accent);"></i> Мы перезвоним вам на {{ order.customer_phone }}{% if site.working_hours %} ({{ site.working_hours }}){% endif %}.</p>
+
+    {% elif order.contact_method == 'call' %}
+        <p class="fw-bold">Свяжитесь с нами, чтобы подтвердить заказ:</p>
+        <div class="d-grid gap-2">
+            {% if site.phone %}<a href="tel:{{ site.phone }}" class="btn-x btn-x--lg"><i class="fas fa-phone"></i> {{ site.phone }}</a>{% endif %}
+            {% if site.email %}<a href="mailto:{{ site.email }}" class="btn-x btn-x--line"><i class="fas fa-envelope"></i> {{ site.email }}</a>{% endif %}
+        </div>
+        <ul class="list-unstyled text-muted small mt-3 mb-0">
+            {% if site.working_hours %}<li><i class="fas fa-clock"></i> {{ site.working_hours }}</li>{% endif %}
+            {% if site.address %}<li><i class="fas fa-location-dot"></i> {{ site.address }}</li>{% endif %}
+        </ul>
+
+    {% else %}
+        <p class="mb-0"><i class="fas fa-circle-info" style="color:var(--accent);"></i> Заказ сохранён, менеджер свяжется с вами{% if order.customer_phone %} по телефону {{ order.customer_phone }}{% endif %}.</p>
+    {% endif %}
+
+    <a href="{% url 'home' %}" class="btn-x btn-x--line btn-x--block mt-3"><i class="fas fa-store"></i> К покупкам</a>
+</div>
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends 'store/base.html' %}
+
+{% block title %}Оформление заказа — {{ site.shop_name|default:"СтройМаг" }}{% endblock %}
+
+{% block content %}
+<h1 class="section-title mb-4">Оформление заказа</h1>
+
+<div class="row g-4">
+    <!-- Форма -->
+    <div class="col-lg-7">
+        <form method="POST" class="surface p-4">
+            {% csrf_token %}
+            {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+
+            <div class="mb-3">
+                <label class="form-label">Ваше имя</label>
+                {{ form.customer_name }}
+                {% if form.customer_name.errors %}<div class="text-danger small mt-1">{{ form.customer_name.errors|striptags }}</div>{% endif %}
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Телефон</label>
+                <div class="input-group">
+                    <span class="input-group-text">+7</span>
+                    {{ form.customer_phone }}
+                </div>
+                {% if form.customer_phone.errors %}<div class="text-danger small mt-1">{{ form.customer_phone.errors|striptags }}</div>{% endif %}
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label d-block">Как с вами связаться?</label>
+                <div class="method-grid">
+                    {% for radio in form.contact_method %}
+                        <label class="method">{{ radio.tag }} <span>{{ radio.choice_label }}</span></label>
+                    {% endfor %}
+                </div>
+                {% if form.contact_method.errors %}<div class="text-danger small mt-1">{{ form.contact_method.errors|striptags }}</div>{% endif %}
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label">Комментарий</label>
+                {{ form.comment }}
+            </div>
+
+            <label class="d-flex align-items-start gap-2 mb-3" style="cursor:pointer;font-size:.9rem;color:var(--muted);">
+                {{ form.consent }}
+                <span>Я согласен(а) на обработку персональных данных в соответствии с
+                    <a href="{% url 'privacy' %}" target="_blank">политикой конфиденциальности</a>.</span>
+            </label>
+            {% if form.consent.errors %}<div class="text-danger small mb-3">{{ form.consent.errors|striptags }}</div>{% endif %}
+
+            <button type="submit" class="btn-x btn-x--lg btn-x--block"><i class="fas fa-paper-plane"></i> Отправить заказ</button>
+        </form>
+    </div>
+
+    <!-- Сводка -->
+    <div class="col-lg-5">
+        <div class="surface p-4" style="position:sticky;top:84px;">
+            <h2 class="h5 fw-bold mb-3">Ваш заказ</h2>
+            {% for item in cart_items %}
+            <div class="d-flex justify-content-between py-2" style="border-bottom:1px solid var(--line);">
+                <span class="pe-2">{{ item.product.title }} <span class="text-muted small">({{ item.size }}) ×{{ item.qty }}</span></span>
+                <span class="fw-bold text-nowrap">{{ item.sum_retail }} ₽</span>
+            </div>
+            {% endfor %}
+            <div class="d-flex justify-content-between mt-3">
+                <span class="fw-bold">Итого</span>
+                <span class="price" style="font-size:1.4rem;">{{ total_retail }} ₽</span>
+            </div>
+            <div class="d-flex justify-content-between text-muted small"><span>Опт</span><span>{{ total_wholesale }} ₽</span></div>
+            <a href="{% url 'cart_detail' %}" class="btn-x btn-x--line btn-x--block mt-3"><i class="fas fa-arrow-left"></i> В корзину</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

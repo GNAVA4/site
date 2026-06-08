@@ -1,0 +1,37 @@
+{% extends 'store/base.html' %}
+
+{% block title %}{{ category.name }} — {{ site.shop_name|default:"СтройМаг" }}{% endblock %}
+
+{% block content %}
+<nav class="mb-3" style="font-size:.9rem;">
+    <a href="{% url 'home' %}" class="text-muted">Главная</a>
+    <span class="text-muted"> / </span>
+    <a href="{% url 'catalog' %}" class="text-muted">Каталог</a>
+    <span class="text-muted"> / </span>
+    <span>{{ category.name }}</span>
+</nav>
+
+<!-- Баннер категории с её фото -->
+<div class="cat-hero mb-4"
+     {% if category.image %}style="background-image:linear-gradient(to top, rgba(17,24,39,.85) 0%, rgba(17,24,39,.25) 70%, rgba(17,24,39,.1) 100%), url('{{ category.image.url }}');background-size:cover;background-position:center;"{% endif %}>
+    <div class="eyebrow mb-2" style="color:#fff;opacity:.85;">Категория</div>
+    <div class="d-flex align-items-end justify-content-between flex-wrap gap-2">
+        <h1>{{ category.name }}</h1>
+        <span class="chip">{{ page_obj.paginator.count }} товаров</span>
+    </div>
+</div>
+
+{% include 'store/_browse_controls.html' %}
+<div class="product-grid">
+    {% for product in products %}
+        {% include 'store/_product_card.html' with product=product %}
+    {% empty %}
+        <div style="grid-column:1/-1;" class="surface p-5 text-center">
+            <i class="fas fa-box-open text-muted mb-3" style="font-size:2.5rem;"></i>
+            <h3 class="h5">Ничего не найдено</h3>
+            <a href="{% url 'category_detail' category.slug %}" class="btn-x btn-x--soft mt-2">Сбросить фильтры</a>
+        </div>
+    {% endfor %}
+</div>
+{% include 'store/_pager.html' %}
+{% endblock %}

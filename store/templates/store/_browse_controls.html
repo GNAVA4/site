@@ -1,0 +1,18 @@
+{# Простые фильтры для каталога/категории: сортировка + пара переключателей. #}
+{# Без полей цены — чтобы панель не переполняла строку (фикс «едет/обрезается»). GET, авто-submit. #}
+<form method="get" class="browse-controls mb-4">
+    <label class="bc-sort">
+        <span class="text-muted small">Сортировка</span>
+        <select name="sort" class="form-select" onchange="this.form.submit()">
+            {% for val, opt in sorts.items %}
+                <option value="{{ val }}" {% if val == sort %}selected{% endif %}>{{ opt.1 }}</option>
+            {% endfor %}
+        </select>
+    </label>
+    <label class="bc-check">
+        <input type="checkbox" name="instock" value="1" {% if f_instock %}checked{% endif %} onchange="this.form.submit()"> В наличии
+    </label>
+    <label class="bc-check">
+        <input type="checkbox" name="sale" value="1" {% if f_sale %}checked{% endif %} onchange="this.form.submit()"> Со скидкой
+    </label>
+</form>

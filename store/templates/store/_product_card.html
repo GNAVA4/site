@@ -1,0 +1,49 @@
+{# Карточка товара. Ожидает переменную product. #}
+<div class="pcard">
+    <div class="pcard__badges">
+        {% if product.retail_discounted %}<span class="badge-pill badge-disc">−{{ product.effective_discount_percent }}%</span>{% endif %}
+        {% if product.is_hit %}<span class="badge-pill badge-hit"><i class="fas fa-fire"></i> Хит</span>{% endif %}
+        {% if product.stock < 1 %}<span class="badge-pill badge-soldout">Нет в наличии</span>
+        {% elif product.stock <= site.low_stock_threshold %}<span class="badge-pill badge-low">Мало осталось</span>{% endif %}
+    </div>
+    <a href="{% url 'product_detail' product.pk %}" class="pcard__media pcard__media--contain">
+        {% if product.image %}
+            <img src="{{ product.image.url }}" alt="{{ product.title }}" loading="lazy">
+        {% else %}
+            <i class="fas fa-image text-muted" style="font-size:2rem;"></i>
+        {% endif %}
+    </a>
+    <div class="pcard__body">
+        <a href="{% url 'product_detail' product.pk %}" class="pcard__title">{{ product.title }}</a>
+        <div class="pcard__price">
+            <span class="price">{{ product.current_retail }} ₽</span>
+            {% if product.retail_discounted %}<span class="price-old">{{ product.price_retail }} ₽</span>{% endif %}
+            <span class="pcard__opt">опт {{ product.current_wholesale }}{% if product.wholesale_discounted %} <s class="text-muted">{{ product.price_wholesale }}</s>{% endif %}</span>
+        </div>
+    </div>
+    <div class="pcard__foot">
+        {% if product.stock < 1 %}
+            <button class="btn-x btn-x--line btn-x--block" disabled>Нет в наличии</button>
+        {% else %}
+            <form action="{% url 'add_to_cart' product.pk %}" method="POST" class="js-add">
+                {% csrf_token %}
+                {% if product.sizes.all %}
+                    <div class="size-field">
+                        <span class="size-field__label">Размер</span>
+                        <select name="size" class="size-select" aria-label="Размер">
+                            {% for size in product.sizes.all %}<option value="{{ size.size_value }}">{{ size.size_value }}</option>{% endfor %}
+                        </select>
+                    </div>
+                {% endif %}
+                <div class="buy-row">
+                    <div class="stepper">
+                        <button type="button" data-dir="-1" aria-label="минус">−</button>
+                        <input type="number" class="qty-input" name="quantity" value="1" min="1" max="{{ product.stock }}">
+                        <button type="button" data-dir="1" aria-label="плюс">+</button>
+                    </div>
+                    <button type="submit" class="btn-x btn-add" aria-label="В корзину"><i class="fas fa-cart-plus"></i><span class="hide-mobile">В корзину</span></button>
+                </div>
+            </form>
+        {% endif %}
+    </div>
+</div>

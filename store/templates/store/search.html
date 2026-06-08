@@ -1,0 +1,47 @@
+{% extends 'store/base.html' %}
+
+{% block title %}Поиск{% if query %}: {{ query }}{% endif %} — {{ site.shop_name|default:"СтройМаг" }}{% endblock %}
+
+{% block content %}
+<div class="eyebrow mb-1">Поиск</div>
+<h1 class="section-title mb-4">{% if query %}Результаты по запросу «{{ query }}»{% else %}Поиск и подбор товаров{% endif %}</h1>
+
+<form class="search-bar mb-4" action="{% url 'search' %}" method="get" role="search">
+    <input type="search" name="q" value="{{ query }}" class="form-control form-control-lg"
+           placeholder="Что ищете? Например: матрас, дрель, плитка…" aria-label="Поиск товаров" autofocus>
+    <button class="btn-x btn-x--lg" type="submit"><i class="fas fa-magnifying-glass"></i><span class="ms-2 hide-mobile">Найти</span></button>
+</form>
+
+{% if mode == 'results' or mode == 'browse' %}
+    {% include 'store/_search_filters.html' %}
+    {% if products %}
+        <p class="text-muted mb-3">{% if query %}Найдено: {{ page_obj.paginator.count }}{% else %}Товаров: {{ page_obj.paginator.count }}{% endif %}</p>
+        <div class="product-grid">
+            {% for product in products %}{% include 'store/_product_card.html' with product=product %}{% endfor %}
+        </div>
+        {% include 'store/_pager.html' %}
+    {% else %}
+        <div class="empty-search">
+            <i class="fas fa-filter"></i>
+            <p class="mt-3 mb-1 fw-bold">По выбранным фильтрам ничего не найдено.</p>
+            <p class="text-muted mb-0">Смягчите фильтры или <a href="{{ request.path }}{% if query %}?q={{ query|urlencode }}{% endif %}">сбросьте их</a>.</p>
+        </div>
+    {% endif %}
+{% elif mode == 'empty' %}
+    {% if suggestions %}
+        <div class="search-note mb-3">
+            <i class="fas fa-circle-info"></i>
+            Точных совпадений по запросу «{{ query }}» нет. Возможно, вы искали это:
+        </div>
+        <div class="product-grid">
+            {% for product in suggestions %}{% include 'store/_product_card.html' with product=product %}{% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-search">
+            <i class="fas fa-magnifying-glass"></i>
+            <p class="mt-3 mb-1 fw-bold">По запросу «{{ query }}» ничего не найдено.</p>
+            <p class="text-muted mb-0">Попробуйте другое слово или загляните в <a href="{% url 'catalog' %}">каталог</a>.</p>
+        </div>
+    {% endif %}
+{% endif %}
+{% endblock %}

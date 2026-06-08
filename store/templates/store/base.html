@@ -1,0 +1,163 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ site.shop_name|default:"СтройМаг" }}{% endblock %}</title>
+
+    <!-- Bootstrap + FontAwesome с Cloudflare CDN (cdnjs) — стабильно работает в РФ -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Шрифты темы: грузим НЕблокирующе, чтобы медленный Google Fonts не тормозил отрисовку -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Hanken+Grotesk:wght@400;500;600;700&display=swap"></noscript>
+
+    <!-- Тема -->
+    <link rel="stylesheet" href="{% static 'store/theme.css' %}">
+    <!-- Акцентный цвет из админки -->
+    <style>:root { --accent: {{ site.accent_color|default:"#2c7be5" }}; }</style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+    <!-- Контейнер всплывающих уведомлений -->
+    <div class="toast-host" id="toastHost"></div>
+
+    <!-- Шапка -->
+    <header class="site-header">
+        <div class="container-x site-header__row">
+            <a class="brand" href="{% url 'home' %}"><i class="fas fa-cube"></i>{{ site.shop_name|default:"СтройМаг" }}</a>
+
+            <nav class="nav-x hide-mobile">
+                <a href="{% url 'home' %}">Главная</a>
+                <div class="dropdown">
+                    <a href="{% url 'catalog' %}" class="dropdown-toggle" data-bs-toggle="dropdown" data-bs-auto-close="true">Каталог</a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item fw-bold" href="{% url 'catalog' %}">Все категории</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        {% for cat in categories %}
+                            <li><a class="dropdown-item" href="{% url 'category_detail' cat.slug %}">
+                                <i class="fas {{ cat.icon|default:'fa-box' }} me-2" style="width:18px;text-align:center;color:var(--accent);"></i>{{ cat.name }}
+                            </a></li>
+                        {% empty %}
+                            <li><span class="dropdown-item text-muted">Категорий пока нет</span></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <a href="{% url 'about' %}">О магазине</a>
+                <a href="{% url 'track_order' %}">Проверить заказ</a>
+                <a href="{% url 'contacts' %}">Контакты</a>
+            </nav>
+
+            <div class="d-flex align-items-center gap-2 ms-auto">
+                <form class="header-search hide-mobile" action="{% url 'search' %}" method="get" role="search">
+                    <input type="search" name="q" value="{{ query|default:'' }}" class="form-control" placeholder="Поиск товаров…" aria-label="Поиск товаров">
+                    <button class="btn-x" type="submit" aria-label="Найти"><i class="fas fa-magnifying-glass"></i></button>
+                </form>
+                <a href="{% url 'cart_detail' %}" class="btn-x header-cart hide-mobile {% if not request.session.cart %}btn-x--line{% endif %}">
+                    <i class="fas fa-cart-shopping"></i>
+                    <span>Корзина</span>
+                    <span class="ms-1 fw-bold js-cart-count" {% if not request.session.cart %}style="display:none"{% endif %}>{{ request.session.cart|length }}</span>
+                </a>
+
+                <!-- На телефоне вместо корзины — поиск (корзина есть в нижней таб-панели и в бургер-меню) -->
+                <a href="{% url 'search' %}" class="btn-x btn-x--line hide-desktop" aria-label="Поиск" style="padding:13px 15px;">
+                    <i class="fas fa-magnifying-glass"></i>
+                </a>
+
+                <!-- Мобильное меню (гамбургер) -->
+                <div class="dropdown hide-desktop">
+                    <button class="btn-x btn-x--line" type="button" data-bs-toggle="dropdown" aria-label="Меню" style="padding:13px 15px;">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="{% url 'home' %}">Главная</a></li>
+                        <li><a class="dropdown-item" href="{% url 'catalog' %}">Каталог</a></li>
+                        <li><a class="dropdown-item" href="{% url 'cart_detail' %}">Корзина</a></li>
+                        <li><a class="dropdown-item" href="{% url 'about' %}">О магазине</a></li>
+                        <li><a class="dropdown-item" href="{% url 'track_order' %}">Проверить заказ</a></li>
+                        <li><a class="dropdown-item" href="{% url 'contacts' %}">Контакты</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Контент -->
+    <main class="container-x py-4">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Подвал -->
+    <footer class="site-footer">
+        <div class="container-x">
+            <div class="row g-4">
+                <div class="col-md-5">
+                    <div class="brand" style="color:#fff;"><i class="fas fa-cube"></i>{{ site.shop_name|default:"СтройМаг" }}</div>
+                    {% if site.hero_subtitle %}<p class="mt-2 mb-2" style="max-width:40ch;">{{ site.hero_subtitle }}</p>{% endif %}
+                    <div class="d-flex flex-wrap gap-3">
+                        <a href="{% url 'catalog' %}">Каталог</a>
+                        <a href="{% url 'about' %}">О магазине</a>
+                        <a href="{% url 'track_order' %}">Проверить заказ</a>
+                        <a href="{% url 'contacts' %}">Контакты</a>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="fw-bold text-white mb-2">Контакты</div>
+                    {% if site.phone %}<div><a href="tel:{{ site.phone }}">{{ site.phone }}</a></div>{% endif %}
+                    {% if site.email %}<div><a href="mailto:{{ site.email }}">{{ site.email }}</a></div>{% endif %}
+                </div>
+                <div class="col-6 col-md-4">
+                    <div class="fw-bold text-white mb-2">Магазин</div>
+                    {% if site.address %}<div>{{ site.address }}</div>{% endif %}
+                    {% if site.working_hours %}<div>{{ site.working_hours }}</div>{% endif %}
+                </div>
+            </div>
+            <hr style="border-color:rgba(255,255,255,.15);">
+            <small>&copy; 2026 {{ site.shop_name|default:"СтройМаг" }}. Все права защищены.
+                · <a href="{% url 'privacy' %}">Политика конфиденциальности</a></small>
+        </div>
+    </footer>
+
+    <!-- Нижняя таб-панель (мобильная) -->
+    <nav class="tabbar">
+        {% url 'home' as home_url %}
+        {% url 'catalog' as catalog_url %}
+        {% url 'cart_detail' as cart_url %}
+        {% url 'contacts' as contacts_url %}
+        <a href="{{ home_url }}" class="{% if request.path == home_url %}is-active{% endif %}"><i class="fas fa-house"></i>Главная</a>
+        <a href="{{ catalog_url }}" class="{% if request.path == catalog_url %}is-active{% endif %}"><i class="fas fa-layer-group"></i>Каталог</a>
+        <a href="{{ cart_url }}" class="position-relative {% if request.path == cart_url %}is-active{% endif %}">
+            <i class="fas fa-cart-shopping"></i>Корзина
+            <span class="tab-badge js-cart-count" {% if not request.session.cart %}style="display:none"{% endif %}>{{ request.session.cart|length }}</span>
+        </a>
+        <a href="{{ contacts_url }}" class="{% if request.path == contacts_url %}is-active{% endif %}"><i class="fas fa-headset"></i>Контакты</a>
+    </nav>
+
+    <!-- Плавающий виджет корзины (ПК + моб.), кроме самой корзины -->
+    {% url 'cart_detail' as cart_u %}
+    {% if request.path != cart_u %}
+    <a href="{{ cart_u }}" class="cart-fab js-cart-widget {% if cart_count %}is-shown{% endif %}" aria-label="Перейти в корзину">
+        <i class="fas fa-cart-shopping"></i>
+        <span><b class="js-cart-total">{{ cart_total }}</b> ₽</span>
+    </a>
+    {% endif %}
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'store/app.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

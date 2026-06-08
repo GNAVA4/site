@@ -1,0 +1,49 @@
+{
+  "project": "my_shop (СтройМаг)",
+  "updated": "2026-06-03",
+  "session": 33,
+  "stack": [
+    "python-3.14",
+    "django-6.0.2",
+    "sqlite",
+    "rapidfuzz",
+    "bootstrap5-cdnjs",
+    "css-variables",
+    "google-fonts",
+    "vanilla-js"
+  ],
+  "status": "active",
+  "session_intent_last": "фиксы фильтров поиска: крестик offcanvas (data-bs-target), убран видимый {#комментарий#}, поиск без запроса показывает все товары + фильтры",
+  "open_bugs": [],
+  "open_tasks": [
+    {
+      "task": "прод-БД (SQLite→Postgres) + collectstatic; тогда же апгрейд поиска на pg_trgm/SearchVector (ADR 003)",
+      "priority": "medium",
+      "blocked_by": null
+    },
+    {
+      "task": "убрать неиспользуемый settings.TELEGRAM_MANAGER; удалить мёртвый product_list.html",
+      "priority": "low",
+      "blocked_by": null
+    }
+  ],
+  "pending_verification": [
+    {
+      "what": "НА ТЕЛЕФОНЕ (s033): крестик закрывает панель фильтров поиска; поиск по лупе открывает товары+фильтры; простые фильтры каталога/категории без переполнения; галерея фото (карусель при >1 фото)",
+      "who": "user",
+      "since_session": 31
+    }
+  ],
+  "verified_by_user": "2026-06-03: «визуально всё вроде норм» — поиск/поле в шапке/моб.шапка, скидки (товар/категория), редизайн (до s031)",
+  "last_change": "фиксы фильтров поиска: крестик offcanvas (data-bs-target), убран видимый комментарий, поиск без запроса = все товары + фильтры; 43/43 тестов",
+  "key_files": {
+    "store/listing.py": "витрина: browse() фильтры (в наличии/скидка/хит/категория/цена)+сортировка(+релевантность)+пагинация (PAGE_SIZE=12)",
+    "store/templates/store/_search_filters.html": "расширенные фильтры поиска (offcanvas-lg: ПК-бар, моб-выезжает)",
+    "store/models.py": "Product.effective_discount_* (товар > категория); DiscountTarget на модуле; ProductImage(галерея)+Product.gallery",
+    "store/search.py": "поиск: нормализация (Python), rapidfuzz-Левенштейн, ранжирование, AND + «похожие»",
+    "store/static/store/theme.css": "дизайн-система (переменные + компоненты, +.header-search/.search-bar)",
+    "store/admin.py": "товары/категории (скидки в списке) + Order(статистика) + SiteSettings(singleton)",
+    "store/cart.py": "Cart: add/set_qty/change/change_size/remove; sum_* по current_*",
+    ".project-brain/decisions/": "adr_001 заказы/SiteSettings; adr_002 трекинг; adr_003 поиск Python; adr_004 скидка категории"
+  }
+}
