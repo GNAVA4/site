@@ -1,5 +1,5 @@
 # MEMORY INDEX — my_shop
-_Updated: 2026-06-03 session 033_
+_Updated: 2026-06-08 session 035_
 
 ## By topic
 | Topic | Files |
@@ -13,6 +13,8 @@ _Updated: 2026-06-03 session 033_
 | дизайн/редизайн | session_005, plan_002, store/static/store/theme.css, design-skills (frontend-design/theme-factory) |
 | тесты | session_003, store/tests.py |
 | деплой/безопасность | session_001, session_003, CONTEXT |
+| git/README/публикация | session_034, README.md, .gitignore (remote github.com/GNAVA4/site) |
+| прод-подготовка/БД/деплой | session_035, adr_005, docker-compose.yml, .env.example, settings.py (DATABASE_URL/WhiteNoise/gunicorn) |
 | архитектура | architecture.md |
 | поиск товаров | session_026, store/search.py, adr_003, insight_2026-06-02_sqlite-cyrillic-icase |
 | витрина/фильтры/пагинация | session_031+032, store/listing.py, _browse_controls (простые), _pager |
@@ -56,6 +58,8 @@ _Updated: 2026-06-03 session 033_
 | 031 | 2026-06-03 | витрина (фильтры/сортировка/пагинация, store/listing.py) + страница «Скидки» /sale/ + галерея фото товара (ProductImage, миграция 0016) | listing.py (НОВ), views, urls, models, admin, шаблоны, theme.css, tests, 0016 |
 | 032 | 2026-06-03 | убран раздел «Скидки» (/sale/); простые фильтры каталога/категории (фикс переполнения); расширенные фильтры поиска (offcanvas на моб. + «Применить») | listing.py, views, urls, base, _browse_controls, _search_filters (НОВ), search.html, theme.css, tests; sale.html удалён |
 | 033 | 2026-06-03 | фиксы фильтров поиска: крестик offcanvas (data-bs-target), убран видимый {#многострочный комментарий#}, поиск без запроса = все товары + фильтры (режимы browse/results/empty) | _search_filters, views.search, search.html, tests |
+| 034 | 2026-06-08 | README (установка/запуск) + .gitignore; git init + push на github.com/GNAVA4/site (main, 2db2b1d, без Claude в соавторах); проверка секретов (db/media/venv/логи не в репо) | README.md (НОВ), .gitignore (НОВ), git |
+| 035 | 2026-06-08 | Прод-Партия 1: SQLite→PostgreSQL (dev Docker:5433 + прод DATABASE_URL, ADR 005, psycopg3); WhiteNoise+STORAGES+gunicorn; .env.example; чистка (TELEGRAM_MANAGER, product_list.html). 43/43 на Postgres, check --deploy 0 issues | docker-compose.yml (НОВ), settings.py, requirements.txt, .env.example (НОВ), README.md, adr_005 |
 
 ## Decisions (ADRs)
 | # | Title | Status |
@@ -64,6 +68,7 @@ _Updated: 2026-06-03 session 033_
 | 002 | Гостевой трекинг заказа по коду (без аккаунтов) | active |
 | 003 | Поиск на стороне Python (не SQL), rapidfuzz-Левенштейн | active |
 | 004 | Скидка на категорию + приоритет товарной скидки (без суммирования) | active |
+| 005 | PostgreSQL и в dev (Docker), и на проде — паритет сред | active |
 
 ## Plans
 | # | Title | Status |

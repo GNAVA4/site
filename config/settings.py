@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 import os
+import urllib.parse
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -39,9 +40,6 @@ ALLOWED_HOSTS = [h.strip() for h in os.environ.get('DJANGO_ALLOWED_HOSTS', '').s
 if not ALLOWED_HOSTS and DEBUG:
     ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
-# Telegram-аккаунт менеджера, куда уходит заказ из корзины (вынесено из views.py).
-TELEGRAM_MANAGER = os.environ.get('TELEGRAM_MANAGER', 'maks3081')
-
 
 # Application definition
 
@@ -59,6 +57,8 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    # WhiteNoise отдаёт собранную статику прямо приложением (сразу после SecurityMiddleware).
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -90,13 +90,28 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
+# PostgreSQL и в разработке (Docker, см. docker-compose.yml), и на проде — паритет сред.
+# Конфиг берётся из DATABASE_URL. Локальный дефолт указывает на dev-контейнер (порт 5433),
+# чтобы `docker compose up -d` + migrate работали без ручной настройки окружения.
+# На проде задайте DATABASE_URL (managed/self-hosted Postgres).
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+
+def _database_config():
+    url = os.environ.get('DATABASE_URL', 'postgres://shop:shop@127.0.0.1:5433/shop')
+    p = urllib.parse.urlparse(url)
+    return {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': urllib.parse.unquote(p.path.lstrip('/')),
+        'USER': urllib.parse.unquote(p.username or ''),
+        'PASSWORD': urllib.parse.unquote(p.password or ''),
+        'HOST': p.hostname or '',
+        'PORT': str(p.port or ''),
+        # Переиспользование соединений (сек). 0 — закрывать после каждого запроса.
+        'CONN_MAX_AGE': int(os.environ.get('DJANGO_CONN_MAX_AGE', '60')),
     }
-}
+
+
+DATABASES = {'default': _database_config()}
 
 
 # Password validation
@@ -129,6 +144,16 @@ TIME_ZONE = 'Europe/Moscow'
 STATIC_URL = 'static/'
 # Для деплоя: `python manage.py collectstatic` собирает сюда.
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# WhiteNoise: сжатие + хэш-имена файлов (cache-busting) для собранной статики.
+STORAGES = {
+    'default': {
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+    },
+    'staticfiles': {
+        'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+    },
+}
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'

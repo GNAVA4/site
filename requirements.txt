@@ -6,3 +6,6 @@ Django==6.0.2          # фреймворк
 pillow==12.1.0         # ImageField (загрузка фото товаров/категорий/баннеров)
 django-cleanup==9.0.0  # удаление старых файлов-картинок при замене
 rapidfuzz==3.14.5      # нечёткий поиск по товарам (Левенштейн), см. store/search.py / ADR 003
+psycopg[binary]==3.3.4 # драйвер PostgreSQL (dev в Docker + прод), см. docker-compose.yml
+whitenoise==6.12.0     # раздача статики приложением на проде (без отдельного nginx-локейшна)
+gunicorn==26.0.0       # прод WSGI-сервер (Linux; локально не используется — там runserver)

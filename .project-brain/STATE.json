@@ -1,11 +1,15 @@
 {
   "project": "my_shop (СтройМаг)",
-  "updated": "2026-06-03",
-  "session": 33,
+  "updated": "2026-06-08",
+  "session": 35,
   "stack": [
     "python-3.14",
     "django-6.0.2",
-    "sqlite",
+    "postgresql-17",
+    "psycopg3",
+    "docker-compose",
+    "whitenoise",
+    "gunicorn",
     "rapidfuzz",
     "bootstrap5-cdnjs",
     "css-variables",
@@ -13,16 +17,33 @@
     "vanilla-js"
   ],
   "status": "active",
-  "session_intent_last": "фиксы фильтров поиска: крестик offcanvas (data-bs-target), убран видимый {#комментарий#}, поиск без запроса показывает все товары + фильтры",
+  "session_intent_last": "прод-подготовка Партия 1: PostgreSQL (dev в Docker + прод, паритет, ADR 005), WhiteNoise+gunicorn, .env.example, чистка (TELEGRAM_MANAGER/product_list.html); README под Postgres",
+  "git": {
+    "remote": "https://github.com/GNAVA4/site.git",
+    "branch": "main",
+    "first_commit": "2db2b1d (s034; amend убрал Co-Authored-By: Claude по просьбе юзера, force-push)",
+    "policy": "НЕ добавлять Co-Authored-By: Claude в коммиты этого репо",
+    "ignored": "venv, db.sqlite3, media/, staticfiles/, *.log, .env*, .idea/"
+  },
   "open_bugs": [],
   "open_tasks": [
     {
-      "task": "прод-БД (SQLite→Postgres) + collectstatic; тогда же апгрейд поиска на pg_trgm/SearchVector (ADR 003)",
+      "task": "ПАРТИЯ 2 (после выбора хостинга): nginx+gunicorn+systemd, TLS (Let's Encrypt), media через nginx, скрипт бэкапа Postgres+media, инструкция деплоя; реквизиты ИП в /privacy/; реальные SiteSettings",
       "priority": "medium",
+      "blocked_by": "выбор хостинга (рекомендация: РФ VPS)"
+    },
+    {
+      "task": "РЕШЕНИЕ: Bootstrap/FontAwesome вендорить локально vs оставить cdnjs (cdnjs уже работает в РФ — опц. усиление)",
+      "priority": "low",
       "blocked_by": null
     },
     {
-      "task": "убрать неиспользуемый settings.TELEGRAM_MANAGER; удалить мёртвый product_list.html",
+      "task": "опц. апгрейд поиска на pg_trgm/SearchVector (теперь возможно — Postgres и в dev, ADR 003/005); при росте каталога",
+      "priority": "low",
+      "blocked_by": null
+    },
+    {
+      "task": "репозиторий публичный: дефолтный django-insecure SECRET_KEY открыт. На проде DJANGO_SECRET_KEY из env обязателен; опц. убрать хардкод-fallback",
       "priority": "low",
       "blocked_by": null
     }
@@ -35,8 +56,11 @@
     }
   ],
   "verified_by_user": "2026-06-03: «визуально всё вроде норм» — поиск/поле в шапке/моб.шапка, скидки (товар/категория), редизайн (до s031)",
-  "last_change": "фиксы фильтров поиска: крестик offcanvas (data-bs-target), убран видимый комментарий, поиск без запроса = все товары + фильтры; 43/43 тестов",
+  "last_change": "прод-Партия 1: SQLite→PostgreSQL (dev Docker:5433 + прод через DATABASE_URL, ADR 005), psycopg3, WhiteNoise+STORAGES, gunicorn, .env.example, убран TELEGRAM_MANAGER + product_list.html; 43/43 тестов на Postgres, check --deploy 0 issues",
   "key_files": {
+    "docker-compose.yml": "dev PostgreSQL 17 (хост-порт 5433, volume shop_pgdata); docker compose up -d",
+    "config/settings.py": "DATABASES из DATABASE_URL (urllib.parse, дефолт=dev-контейнер); WhiteNoiseMiddleware+STORAGES(manifest); прод-SECURE_* при DEBUG=False",
+    ".env.example": "шаблон прод-переменных (SECRET_KEY/DEBUG/ALLOWED_HOSTS/CSRF/DATABASE_URL/EMAIL_*)",
     "store/listing.py": "витрина: browse() фильтры (в наличии/скидка/хит/категория/цена)+сортировка(+релевантность)+пагинация (PAGE_SIZE=12)",
     "store/templates/store/_search_filters.html": "расширенные фильтры поиска (offcanvas-lg: ПК-бар, моб-выезжает)",
     "store/models.py": "Product.effective_discount_* (товар > категория); DiscountTarget на модуле; ProductImage(галерея)+Product.gallery",
@@ -44,6 +68,6 @@
     "store/static/store/theme.css": "дизайн-система (переменные + компоненты, +.header-search/.search-bar)",
     "store/admin.py": "товары/категории (скидки в списке) + Order(статистика) + SiteSettings(singleton)",
     "store/cart.py": "Cart: add/set_qty/change/change_size/remove; sum_* по current_*",
-    ".project-brain/decisions/": "adr_001 заказы/SiteSettings; adr_002 трекинг; adr_003 поиск Python; adr_004 скидка категории"
+    ".project-brain/decisions/": "adr_001 заказы/SiteSettings; adr_002 трекинг; adr_003 поиск Python; adr_004 скидка категории; adr_005 Postgres-паритет"
   }
 }

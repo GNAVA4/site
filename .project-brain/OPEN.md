@@ -1,15 +1,19 @@
 # OPEN ITEMS — my_shop
-_Updated: 2026-06-03 session 033_
+_Updated: 2026-06-08 session 035_
 
 ## In progress
 - (нет — идёт полировка по фидбэку; функционал стабилен, 13 тестов зелёные)
 
 ## TODO
-- [ ] Загрузить hero_image и about_image в админке (фото строителей на главной/о магазине) `[medium]`
-- [ ] Прод-подготовка `[medium]` — SQLite→Postgres, collectstatic, локальный Bootstrap (надёжность РФ),
-  прод SECRET_KEY/SMTP/ALLOWED_HOSTS/CSRF_TRUSTED_ORIGINS в окружении
-- [ ] Подставить реальные реквизиты в /privacy/ (наименование/ИП) `[low]`
-- [ ] Убрать неиспользуемый settings.TELEGRAM_MANAGER; удалить мёртвый product_list.html; осиротевшие media/banners/ `[quick-win]`
+- [ ] **Прод Партия 2** `[medium]` (после выбора хостинга; рекомендация — РФ VPS): nginx + gunicorn +
+  systemd, TLS (Let's Encrypt), media через nginx, скрипт бэкапа Postgres+media, инструкция деплоя.
+- [ ] **РЕШЕНИЕ:** Bootstrap/FontAwesome вендорить локально vs оставить cdnjs `[low]` (cdnjs уже работает
+  в РФ — это опц. усиление; вендоринг = ~5 МБ webfonts + правка url() под manifest).
+- [ ] Подставить реальные реквизиты ИП в /privacy/ (юр.лицо у пользователя есть) `[low]`
+- [ ] Загрузить hero_image и about_image в админке (фото на главной/о магазине) `[medium]`
+- [ ] Репо публичный: дефолтный django-insecure SECRET_KEY открыт → на проде обязателен DJANGO_SECRET_KEY из env; опц. убрать хардкод-fallback `[low]`
+- [ ] Опц. апгрейд поиска на pg_trgm/SearchVector (теперь возможно — Postgres и в dev; ADR 003/005) `[low]`
+- [x] Прод Партия 1 (s035): SQLite→Postgres (Docker, ADR 005), WhiteNoise+gunicorn, .env.example, чистка `[done]`
 - [x] поиск по товарам — реализован (s026, ADR 003); осталось (опц.) slug/SEO `[low]`
 
 ## Open bugs
@@ -26,6 +30,8 @@ _Updated: 2026-06-03 session 033_
 - [ ] Прод SMTP-доступы (EMAIL_HOST/USER/PASSWORD) в окружении
 
 ## Resolved (recent)
+- [x] Прод-Партия 1 (s035): PostgreSQL dev(Docker)+prod через DATABASE_URL (ADR 005), psycopg3, WhiteNoise+gunicorn, .env.example; чистка TELEGRAM_MANAGER/product_list.html; 43/43 на Postgres, check --deploy 0 issues [user]
+- [x] README + git init/push на github.com/GNAVA4/site (s034); убран Claude из соавторов (amend+force-push) [user]
 - [x] Фиксы фильтров поиска (s033): крестик offcanvas (data-bs-target), убран видимый {#комментарий#}, поиск без запроса = товары+фильтры [user]
 - [x] Убран раздел «Скидки» /sale/ (s032): фильтр «со скидкой» переехал в общие фильтры [user]
 - [x] Фикс простых фильтров (s032): убраны поля цены → нет переполнения, таб-панель не дёргается [user]

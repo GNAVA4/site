@@ -9,15 +9,16 @@
 
 - **Python 3.12+** (разрабатывался на 3.14)
 - **Django 6.0**
-- **SQLite** — для разработки (на проде вынести в Postgres)
+- **PostgreSQL 17** — и в разработке (через Docker), и на проде (паритет сред)
+- **psycopg 3** — драйвер БД; **gunicorn** — прод WSGI-сервер; **WhiteNoise** — раздача статики
 - **Pillow** — загрузка изображений, **django-cleanup** — удаление старых файлов
 - **rapidfuzz** — нечёткий поиск по товарам (кириллица + опечатки)
 - Фронт: серверный рендер Django-шаблонов + Bootstrap 5 / FontAwesome (CDN), своя тема на CSS-переменных
 
 ## Требования
 
-- Python 3.12 или новее
-- pip
+- Python 3.12 или новее + pip
+- Docker (для локального PostgreSQL)
 
 ## Установка
 
@@ -38,15 +39,23 @@ source venv/bin/activate
 # 3. Установить зависимости
 python -m pip install -r requirements.txt
 
-# 4. Применить миграции (создаст db.sqlite3)
+# 4. Поднять PostgreSQL в Docker (порт 5433; данные в volume)
+docker compose up -d
+
+# 5. Применить миграции
 python manage.py migrate
 
-# 5. Создать администратора для входа в админку
+# 6. Создать администратора для входа в админку
 python manage.py createsuperuser
 ```
 
-> База `db.sqlite3` и папка `media/` в репозиторий не входят — после установки сайт пустой.
+> БД и папка `media/` в репозиторий не входят — после установки сайт пустой.
 > Товары, категории и настройки сайта добавляются через админку (см. ниже).
+>
+> **Про БД:** локально и на проде используется PostgreSQL. `settings.py` читает `DATABASE_URL`;
+> по умолчанию (без переменной) он указывает на dev-контейнер `postgres://shop:shop@127.0.0.1:5433/shop`,
+> поэтому локально достаточно `docker compose up -d`. Остановить БД: `docker compose down`
+> (данные сохраняются в volume `shop_pgdata`).
 
 ## Запуск
 
@@ -82,6 +91,8 @@ python manage.py test
 | `DJANGO_ALLOWED_HOSTS` | Разрешённые хосты (через запятую) | `example.com,www.example.com` |
 | `DJANGO_CSRF_TRUSTED_ORIGINS` | Доверенные origin для CSRF по HTTPS | `https://example.com` |
 | `DJANGO_SECURE_SSL_REDIRECT` | Принудительный редирект на HTTPS | `True` |
+| `DATABASE_URL` | Строка подключения к PostgreSQL | `postgres://user:pass@host:5432/db` |
+| `DJANGO_CONN_MAX_AGE` | Время жизни соединения с БД (сек) | `60` |
 | `EMAIL_HOST` / `EMAIL_PORT` | SMTP-сервер | `smtp.yandex.ru` / `587` |
 | `EMAIL_HOST_USER` / `EMAIL_HOST_PASSWORD` | Логин/пароль SMTP | — |
 | `EMAIL_USE_TLS` | TLS для SMTP | `True` |
@@ -89,16 +100,26 @@ python manage.py test
 
 При `DEBUG=False` автоматически включаются HSTS, secure-cookies, SSL-redirect и пр.
 
+Скопируйте шаблон и заполните значениями: `cp .env.example .env`.
+Сгенерировать `DJANGO_SECRET_KEY`:
+```bash
+python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+```
+
 ### Чек-лист продакшена
 
 ```bash
-python manage.py collectstatic   # собрать статику в staticfiles/
-python manage.py check --deploy  # проверка прод-настроек безопасности
+python manage.py migrate              # миграции на прод-БД (DATABASE_URL)
+python manage.py collectstatic --noinput  # собрать статику в staticfiles/ (WhiteNoise)
+python manage.py check --deploy       # проверка прод-настроек безопасности (должно быть 0 issues)
+gunicorn config.wsgi:application --bind 0.0.0.0:8000  # запуск прод-сервера (Linux)
 ```
 
-- Вынести БД на Postgres (тогда же поиск можно перевести на `pg_trgm`/`SearchVector`).
+- Статику отдаёт **WhiteNoise** (отдельный nginx-локейшн под статику не обязателен); `media/`
+  (загруженные фото) на проде отдавать через nginx или внешнее хранилище.
+- При росте каталога поиск можно перевести на `pg_trgm`/`SearchVector` (сейчас — Python-side).
 - Bootstrap/FontAwesome подключаются с `cdnjs.cloudflare.com` (jsdelivr и Google Fonts CDN
-  нестабильны в РФ). Для прода предпочтительно захостить ассеты локально.
+  нестабильны в РФ). Для максимальной надёжности ассеты можно захостить локально.
 
 ## Структура
 
@@ -114,4 +135,6 @@ store/    — приложение магазина
   static/store/theme.css — дизайн-система (CSS-переменные)
   templates/store/       — шаблоны
 media/    — загруженные изображения (не в репозитории)
+docker-compose.yml — PostgreSQL для локальной разработки
+.env.example       — шаблон переменных окружения
 ```

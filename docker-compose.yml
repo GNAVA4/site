@@ -1,0 +1,26 @@
+# Локальная БД для разработки: PostgreSQL в Docker (паритет с продом).
+# Запуск:  docker compose up -d
+# Остановка: docker compose down   (данные сохраняются в volume shop_pgdata)
+# Порт 5433 на хосте — чтобы не конфликтовать с локально установленным Postgres (5432).
+
+services:
+  db:
+    image: postgres:17
+    container_name: shop_postgres
+    environment:
+      POSTGRES_DB: shop
+      POSTGRES_USER: shop
+      POSTGRES_PASSWORD: shop          # локальный dev-пароль; на проде НЕ используется
+    ports:
+      - "5433:5432"
+    volumes:
+      - shop_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U shop -d shop"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  shop_pgdata:

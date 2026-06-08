@@ -1,5 +1,5 @@
 # Architecture — my_shop («СтройМаг»)
-_Updated: 2026-06-03 session 033_
+_Updated: 2026-06-08 session 034_
 
 ## Что это
 Небольшой Django-магазин стройтоваров/текстиля. Каталог + корзина в сессии + оформление
@@ -8,10 +8,12 @@ _Updated: 2026-06-03 session 033_
 
 ## Стек
 - Python + Django 6.0.2
-- БД: SQLite (`db.sqlite3`) — dev. Для прода вынести в env.
+- БД: **PostgreSQL 17** — и dev (Docker, `docker-compose.yml`, порт 5433), и прод. Паритет сред (ADR 005).
+  Конфиг через `DATABASE_URL` (settings._database_config, stdlib urllib.parse). Драйвер psycopg 3. SQLite убран.
 - Pillow (ImageField), django-cleanup (удаление старых файлов при замене), rapidfuzz (поиск, s026)
-- Front: серверный рендер Django-templates + Bootstrap 5 / FontAwesome с CDN
-- Конфиг через переменные окружения (os.environ), без django-environ
+- Прод: **gunicorn** (WSGI) + **WhiteNoise** (статика, STORAGES manifest). collectstatic → staticfiles/
+- Front: серверный рендер Django-templates + Bootstrap 5 / FontAwesome с CDN (cdnjs)
+- Конфиг через переменные окружения (os.environ), без django-environ; `.env.example` — шаблон
 
 ## Структура
 ```
@@ -28,6 +30,8 @@ store/         — единственное приложение
   templates/store/ — base + _product_card + index/category/product/cart/checkout/order_success/contacts
   templates/admin/store/order/change_list.html — виджеты статистики заказов  ← s002
 media/         — загруженные изображения (MEDIA_ROOT)
+docker-compose.yml — dev PostgreSQL 17 (порт 5433, volume shop_pgdata)  ← s035
+.env.example   — шаблон переменных окружения (прод)  ← s035
 ```
 
 ## Поток данных корзины
@@ -98,6 +102,8 @@ flowchart LR
 | 2026-06-03 | 031 | Витрина store/listing.py (фильтры «в наличии»/«со скидкой»/цена, сортировка, пагинация PAGE_SIZE=12) на каталоге/категории/поиске; страница /sale/; галерея фото (ProductImage, миграция 0016, карусель на странице товара) |
 | 2026-06-03 | 032 | Убран раздел «Скидки» (/sale/); простые фильтры каталога/категории без полей цены (фикс переполнения/таб-панели); расширенные фильтры поиска (категория/цена/в наличии/скидка/хиты/сортировка+релевантность) в offcanvas-lg (ПК-бар, моб-выезжает + «Применить») |
 | 2026-06-03 | 033 | Фиксы фильтров поиска: крестик offcanvas (data-bs-target для .offcanvas-lg), убран видимый многострочный {#комментарий#}, поиск без запроса = все товары + фильтры (режимы browse/results/empty) |
+| 2026-06-08 | 034 | Проект под git и запушен на github.com/GNAVA4/site (main); добавлены README.md (установка/запуск/прод) и .gitignore (venv/db/media/staticfiles/логи/.env/.idea исключены). Без изменений в коде приложения |
+| 2026-06-08 | 035 | Прод-Партия 1: SQLite→PostgreSQL (dev Docker:5433 + прод через DATABASE_URL, ADR 005, psycopg 3); WhiteNoise+STORAGES (статика) + gunicorn; .env.example; чистка (TELEGRAM_MANAGER, product_list.html). 43/43 тестов на Postgres, check --deploy 0 issues |
 
 ## Поток оформления заказа (s003)
 ```mermaid
