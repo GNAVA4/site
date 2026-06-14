@@ -1,7 +1,7 @@
 {
   "project": "my_shop (СтройМаг)",
   "updated": "2026-06-14",
-  "session": 41,
+  "session": 42,
   "stack": [
     "python-3.14",
     "django-6.0.2",
@@ -33,9 +33,19 @@
   "open_bugs": [],
   "open_tasks": [
     {
-      "task": "ПАРТИЯ 2 (после выбора хостинга): nginx+gunicorn+systemd, TLS (Let's Encrypt), media через nginx, скрипт бэкапа Postgres+media, инструкция деплоя; реквизиты ИП в /privacy/; реальные SiteSettings",
+      "task": "Домен + HTTPS: купить домен → A-запись на 168.222.202.42 → certbot --nginx → в /opt/shop/.env вернуть DJANGO_SECURE_COOKIES=True, DJANGO_SECURE_SSL_REDIRECT=True, ALLOWED_HOSTS/CSRF на домен → systemctl restart shop",
+      "priority": "high",
+      "blocked_by": "покупка домена пользователем"
+    },
+    {
+      "task": "SMTP для email-уведомлений о заказах: заполнить EMAIL_* в /opt/shop/.env + SiteSettings.email (сейчас письма не уходят)",
       "priority": "medium",
-      "blocked_by": "выбор хостинга (рекомендация: РФ VPS)"
+      "blocked_by": "почтовый ящик/SMTP-доступ"
+    },
+    {
+      "task": "SSH: после бэкапа ключа отключить PasswordAuthentication на сервере; реквизиты ИП в /privacy/; офсайт-копия бэкапов",
+      "priority": "medium",
+      "blocked_by": null
     },
     {
       "task": "РЕШЕНИЕ: Bootstrap/FontAwesome вендорить локально vs оставить cdnjs (cdnjs уже работает в РФ — опц. усиление)",
@@ -61,7 +71,17 @@
     }
   ],
   "verified_by_user": "2026-06-03: «визуально всё вроде норм» — поиск/поле в шапке/моб.шапка, скидки (товар/категория), редизайн (до s031)",
-  "last_change": "s041: предрелизный харднинг — honeypot анти-спам на форме заказа, SECRET_KEY-гард (отказ старта с дефолтным ключом при DEBUG=False), уровень логов из env (DJANGO_LOG_LEVEL=INFO), раздел «Безопасность» в DEPLOY.md (ufw/ssh/fail2ban/unattended-upgrades/офсайт-бэкап). check 0, 45/45 тестов",
+  "last_change": "s042: БОЕВОЙ ДЕПЛОЙ на VPS 168.222.202.42 (Ubuntu 26.04, СПб) по IP/http — nginx+gunicorn(systemd)+PostgreSQL18; данные перенесены (9 cat/3 prod/12 orders, суперюзер rus); ufw+fail2ban+бэкап-cron+swap. Сайт открывается снаружи (200). Осталось: домен+HTTPS, SMTP. Код-правка 6a1f762: DJANGO_SECURE_COOKIES",
+  "prod": {
+    "ip": "168.222.202.42",
+    "provider": "SpaceWeb, СПб, Ubuntu 26.04, ИП",
+    "access": "root по SSH-ключу stroymag-vps (C:/Users/rusla/.ssh/id_ed25519, без passphrase); пароль root тоже включён (отключить позже)",
+    "paths": "/opt/shop (юзер shop, venv, .env chmod600); БД-пароль в /root/.shop_dbpass; PostgreSQL 18 (только localhost); STATIC=/opt/shop/staticfiles, MEDIA=/opt/shop/media",
+    "services": "shop.service (gunicorn 127.0.0.1:8000, systemd), nginx (server_name _, /static+/media+proxy), бэкап cron 3:30 (deploy/backup.sh)",
+    "phase": "IP/HTTP — DJANGO_SECURE_COOKIES=False, DJANGO_SECURE_SSL_REDIRECT=False. С доменом+TLS вернуть True",
+    "url": "http://168.222.202.42/ (admin: /admin/, суперюзер rus)",
+    "update_flow": "cd /opt/shop && sudo -u shop git pull; (опц.) pip/migrate/collectstatic; systemctl restart shop"
+  },
   "key_files": {
     "deploy/": "прод-бандл: gunicorn.service (systemd), nginx.conf (прокси+static/media), backup.sh (pg_dump+media cron), DEPLOY.md (пошагово Ubuntu VPS + обновление). ADR 006",
     "docker-compose.yml": "dev PostgreSQL 17 (хост-порт 5433, volume shop_pgdata); docker compose up -d",

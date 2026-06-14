@@ -36,6 +36,9 @@ SQL
 ```bash
 sudo adduser --system --group --home /opt/shop shop
 sudo mkdir -p /opt/shop && sudo chown shop:shop /opt/shop
+# ВАЖНО: домашняя папка создаётся с правами 750 → nginx (www-data) не сможет отдать /static/ и /media/
+# (403 Forbidden). Делаем папку проходимой для остальных:
+sudo chmod 755 /opt/shop
 
 # Клонируем под пользователем shop
 sudo -u shop git clone https://github.com/GNAVA4/site.git /opt/shop

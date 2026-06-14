@@ -126,6 +126,7 @@ flowchart LR
 | 2026-06-14 | 039 | Роль «Менеджер»: группа прав (миграция 0017, ADR 007) — полное ведение магазина без удаления заказов/категорий и без доступа к пользователям/правам; защита в коде (Order/Category has_delete = superuser-only) |
 | 2026-06-14 | 040 | Авто-уведомление магазина о новом заказе: send_order_email шлётся при ЛЮБОМ канале (не только email) на SiteSettings.email + ссылка на админку; сбой не роняет оформление. Получатель — в админке, отправитель/SMTP — в env |
 | 2026-06-14 | 041 | Предрелизный харднинг: honeypot на форме заказа (forms+checkout.html); SECRET_KEY-гард (raise при дефолтном ключе и DEBUG=False); уровень логов из env (DJANGO_LOG_LEVEL=INFO); раздел «Безопасность» в DEPLOY.md (ufw/ssh/fail2ban/unattended-upgrades/офсайт-бэкап) |
+| 2026-06-14 | 042 | 🚀 Боевой деплой на VPS 168.222.202.42 (Ubuntu 26.04, СПб) по IP/http: nginx+gunicorn(systemd shop.service)+PostgreSQL 18; перенос данных; ufw+fail2ban+бэкап-cron+swap. Код-правка settings.py: флаг DJANGO_SECURE_COOKIES для http-этапа. Детали — STATE.prod, session_042. Осталось домен+HTTPS |
 
 ## Поток оформления заказа (s003)
 ```mermaid

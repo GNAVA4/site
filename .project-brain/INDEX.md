@@ -1,5 +1,5 @@
 # MEMORY INDEX — my_shop
-_Updated: 2026-06-14 session 041_
+_Updated: 2026-06-14 session 042_
 
 ## By topic
 | Topic | Files |
@@ -67,6 +67,7 @@ _Updated: 2026-06-14 session 041_
 | 039 | 2026-06-14 | Роль «Менеджер»: группа с 24 правами (миграция 0017, ADR 007) — ведёт магазин без удаления заказов/категорий и без доступа к пользователям; защита в коде (Order/Category has_delete=superuser). Суперюзер rus | store/migrations/0017_manager_group.py (НОВ), store/admin.py, adr_007 |
 | 040 | 2026-06-14 | Авто-уведомление магазина о новом заказе на email при ЛЮБОМ канале (было: только email-канал) + ссылка на админку; не роняет оформление. Получатель=SiteSettings.email, отправитель=DEFAULT_FROM_EMAIL/SMTP. check 0, 44/44 | store/notifications.py, store/views.py, store/tests.py |
 | 041 | 2026-06-14 | Предрелизный харднинг: honeypot анти-спам формы заказа; SECRET_KEY-гард (отказ старта с дефолтным ключом при DEBUG=False); уровень логов из env (DJANGO_LOG_LEVEL); раздел Безопасность в DEPLOY.md (ufw/ssh/fail2ban/...). check 0, 45/45 | forms.py, checkout.html, settings.py, .env.example, tests.py, deploy/DEPLOY.md |
+| 042 | 2026-06-14 | 🚀 БОЕВОЙ ДЕПЛОЙ на VPS 168.222.202.42 (Ubuntu 26.04, СПб) по IP/http: nginx+gunicorn(systemd)+PG18, перенос данных (9cat/3prod/12orders, rus), ufw+fail2ban+бэкап-cron+swap. Снаружи 200. Код-правка: DJANGO_SECURE_COOKIES (settings) | settings.py (6a1f762), сервер /opt/shop, STATE.prod |
 
 ## Decisions (ADRs)
 | # | Title | Status |
@@ -98,3 +99,4 @@ _Updated: 2026-06-14 session 041_
 | insight_2026-05-31_adblock-banner-path | ad-blocker режет пути/классы со словом «banner» → нейтральные имена (promo) |
 | insight_2026-06-02_sqlite-cyrillic-icase | SQLite icontains/lower() не для кириллицы → регистр сворачивать в Python |
 | insight_2026-06-08_dumpdata-cp1251-windows | смена движка БД требует переноса данных; dumpdata на рус.Windows пишет cp1251 → PYTHONUTF8=1 |
+| insight_2026-06-14_nginx-403-static-home-perms | nginx 403 на /static//media/ — /opt/shop создаётся 750, www-data не проходит → chmod 755 |

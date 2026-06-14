@@ -1,16 +1,18 @@
 # OPEN ITEMS — my_shop
-_Updated: 2026-06-14 session 041_
+_Updated: 2026-06-14 session 042_
 
 ## In progress
 - (нет — идёт полировка по фидбэку; функционал стабилен, 13 тестов зелёные)
 
 ## TODO
-- [ ] **Прод Партия 2 — РАЗВЕРНУТЬ** `[medium]`: артефакты ГОТОВЫ (deploy/: gunicorn.service, nginx.conf,
-  backup.sh, DEPLOY.md +раздел Безопасность; ADR 006). Ждёт: заказ РФ-VPS (Ubuntu LTS) + домен (A-запись).
-  От пользователя: провайдер/IP/домен; вариант A (я даю команды) или B (SSH-доступ мне). Затем DEPLOY.md + certbot.
-- [ ] **Серверный харднинг при деплое** (DEPLOY §Безопасность) `[medium]`: ufw (только 22/80/443), Postgres на
-  localhost, SSH по ключу (без root/паролей), fail2ban, unattended-upgrades, офсайт-копия бэкапов,
-  changepassword rus, сильный пароль БД. Опц.: IP-троттлинг/капча формы заказа, jail fail2ban для /admin/.
+- [ ] **Домен + HTTPS** `[high]`: купить домен → A-запись на 168.222.202.42 → `certbot --nginx` → в
+  `/opt/shop/.env` вернуть `DJANGO_SECURE_COOKIES=True`, `DJANGO_SECURE_SSL_REDIRECT=True`, ALLOWED_HOSTS/CSRF
+  на домен → `systemctl restart shop`. (Сейчас прод работает по http://168.222.202.42.)
+- [ ] **SMTP для уведомлений о заказах** `[medium]`: заполнить EMAIL_* в `/opt/shop/.env` + `SiteSettings.email`
+  (сейчас письма о заказах НЕ уходят — нет SMTP).
+- [ ] **Дозакрыть харднинг сервера** `[medium]`: отключить SSH PasswordAuthentication (после бэкапа ключа);
+  офсайт-копия бэкапов; опц. IP-троттлинг/капча формы, jail fail2ban для /admin/.
+- [ ] Реквизиты ИП в /privacy/; загрузить hero/about фото; заполнить реальные контакты/каналы в SiteSettings `[medium]`
 - [ ] **РЕШЕНИЕ:** Bootstrap/FontAwesome вендорить локально vs оставить cdnjs `[low]` (cdnjs уже работает
   в РФ — это опц. усиление; вендоринг = ~5 МБ webfonts + правка url() под manifest).
 - [ ] Подставить реальные реквизиты ИП в /privacy/ (юр.лицо у пользователя есть) `[low]`
@@ -35,6 +37,7 @@ _Updated: 2026-06-14 session 041_
 - [ ] Прод SMTP-доступы (EMAIL_HOST/USER/PASSWORD) в окружении
 
 ## Resolved (recent)
+- [x] 🚀 БОЕВОЙ ДЕПЛОЙ (s042): сайт в проде на VPS 168.222.202.42 (Ubuntu 26.04, СПб) по http; nginx+gunicorn+PG18, данные перенесены (9cat/3prod/12orders, rus), ufw+fail2ban+бэкап-cron+swap. Снаружи 200 [user]
 - [x] Предрелизный харднинг (s041): honeypot анти-спам формы заказа, SECRET_KEY-гард (DEBUG=False), уровень логов из env, раздел Безопасность в DEPLOY.md. check 0, 45/45 [user]
 - [x] Авто-уведомление магазина о заказе (s040): email на SiteSettings.email при любом канале + ссылка на админку; не роняет оформление. check 0, 44/44 [user]
 - [x] Роль «Менеджер» (s039): группа с 24 правами (миграция 0017, ADR 007) — ведёт магазин без удаления заказов/категорий и без auth; защита в коде. Суперюзер rus. check 0, 43/43 [user]
