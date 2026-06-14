@@ -186,11 +186,14 @@ USE_TZ = True
 # --- Прод-настройки безопасности (включаются, когда DEBUG=False) ---
 if not DEBUG:
     SECURE_SSL_REDIRECT = _env_bool('DJANGO_SECURE_SSL_REDIRECT', default=True)
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
-    SECURE_HSTS_SECONDS = 31536000  # 1 год — браузер ходит только по HTTPS
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    SECURE_HSTS_PRELOAD = True
+    # Эти настройки требуют HTTPS. На временном этапе «по IP без домена/TLS» их отключают
+    # через DJANGO_SECURE_COOKIES=False. На проде с доменом+TLS — оставить True (по умолчанию).
+    _secure_https = _env_bool('DJANGO_SECURE_COOKIES', default=True)
+    SESSION_COOKIE_SECURE = _secure_https
+    CSRF_COOKIE_SECURE = _secure_https
+    SECURE_HSTS_SECONDS = 31536000 if _secure_https else 0  # 1 год — браузер ходит только по HTTPS
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = _secure_https
+    SECURE_HSTS_PRELOAD = _secure_https
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = 'DENY'
     # За реверс-прокси (nginx) Django доверяет этому заголовку для определения HTTPS.
