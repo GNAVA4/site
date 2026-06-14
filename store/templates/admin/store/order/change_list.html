@@ -4,7 +4,7 @@
 {% if stats %}
 <div style="display:flex;gap:16px;flex-wrap:wrap;margin:0 0 20px 0;">
   <div style="flex:1;min-width:160px;background:#fff;border:1px solid #e2e2e2;border-radius:10px;padding:16px;">
-    <div style="font-size:12px;color:#888;text-transform:uppercase;">Выручка (розница)</div>
+    <div style="font-size:12px;color:#888;text-transform:uppercase;">Выручка (розница, без отменённых)</div>
     <div style="font-size:26px;font-weight:700;">{{ stats.revenue }} ₽</div>
   </div>
   <div style="flex:1;min-width:160px;background:#fff;border:1px solid #e2e2e2;border-radius:10px;padding:16px;">
@@ -14,7 +14,7 @@
   <div style="flex:1;min-width:200px;background:#fff;border:1px solid #e2e2e2;border-radius:10px;padding:16px;">
     <div style="font-size:12px;color:#888;text-transform:uppercase;">По статусам</div>
     <div style="font-size:14px;">
-      {% for row in stats.by_status %}<span style="margin-right:10px;">{{ row.status }}: <b>{{ row.n }}</b></span>{% endfor %}
+      {% for row in stats.by_status %}<span style="margin-right:10px;">{{ row.label }}: <b>{{ row.n }}</b></span>{% endfor %}
     </div>
   </div>
   <div style="flex:1;min-width:200px;background:#fff;border:1px solid #e2e2e2;border-radius:10px;padding:16px;">

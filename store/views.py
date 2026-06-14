@@ -6,6 +6,7 @@ from django.db import transaction
 from django.db.models import F
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
+from django.urls import reverse
 from django.contrib import messages
 from django.urls import reverse
 from django.views.decorators.http import require_POST
@@ -320,9 +321,14 @@ def checkout(request):
 
             cart.clear()
 
-            # Email отправляем сразу; для tg/wa ссылку покажем на странице успеха.
-            if order.contact_method == Order.ContactMethod.EMAIL:
-                notifications.send_order_email(site, order, notifications.build_order_text(order))
+            # Всегда уведомляем магазин о новом заказе (на site.email), независимо от канала клиента —
+            # чтобы заказ не «потерялся», если покупатель не нажмёт ссылку на странице успеха.
+            admin_url = request.build_absolute_uri(
+                reverse('admin:store_order_change', args=[order.pk])
+            )
+            notifications.send_order_email(
+                site, order, notifications.build_order_text(order), admin_url=admin_url,
+            )
 
             request.session['last_order'] = order.pk
             return redirect('order_success', pk=order.pk)

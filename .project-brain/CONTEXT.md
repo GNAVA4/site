@@ -51,6 +51,9 @@ TELEGRAM_MANAGER и product_list.html. 43/43 тестов на Postgres, `check 
 - Телефон в чекауте: +7 — статичный префикс (input-group), пользователь вводит остаток; +7
   добавляется на сервере (clean_customer_phone), если номер не начинается с '+' [user, s004]
 - Email: dev=console backend, прод=SMTP из env [user]
+- Уведомление магазина о НОВОМ заказе (s040): send_order_email шлёт на SiteSettings.email при ЛЮБОМ
+  канале (а не только при email-канале), со ссылкой на заказ в админке; сбой логируется, оформление не
+  ломает. Владелец узнаёт о заказе независимо от того, нажал ли клиент дип-линк на success [user]
 - Корзина: session['cart']={"id:size":{...}}, ключ непрозрачный, НЕ парсить; мутации только POST [inferred, s001]
 - Опт и розница показываются ОБЕ; порог «от 10 шт» в коде НЕ применяется [user]
 - Поиск — на стороне Python (store/search.py), НЕ в SQL: rapidfuzz-Левенштейн ловит опечатки.
@@ -74,9 +77,15 @@ TELEGRAM_MANAGER и product_list.html. 43/43 тестов на Postgres, `check 
   или с SERVER_NAME='localhost'
 - Если канал включён, но реквизит (telegram_username/whatsapp_phone) пуст → на success показывается
   fallback-текст, не ссылка. Заполнять реквизиты в админке.
+- ⚠️ Авто-уведомление о заказе (s040) уходит на SiteSettings.email. Пусто → письма НЕ будет (warning в лог).
+  На проде нужен рабочий SMTP (EMAIL_* в env) И заполненный «Email для заказов» в админке.
 - settings.TELEGRAM_MANAGER УДАЛЁН (s035) — было мёртвое наследие. Не возвращать.
 - Дефолтный SECRET_KEY — только dev; прод требует длинный DJANGO_SECRET_KEY. ⚠️ репо публичный (s034):
-  django-insecure-дефолт открыт — на проде ОБЯЗАТЕЛЬНО задавать DJANGO_SECRET_KEY из env (override).
+  django-insecure-дефолт открыт. С s041 приложение ОТКАЗЫВАЕТСЯ стартовать при DEBUG=False с дефолтным
+  ключом (raise ImproperlyConfigured) — на проде DJANGO_SECRET_KEY из env ОБЯЗАТЕЛЕН.
+- ⚠️ Honeypot (s041): OrderForm имеет скрытое поле `website` (ловушка от ботов). Оно ДОЛЖНО рендериться в
+  checkout.html (в скрытом блоке) — не удалять, не делать required. Заполнено → заказ отклоняется как спам.
+- Логи (s041): уровень из env `DJANGO_LOG_LEVEL` (дефолт INFO; dev может DEBUG). На проде не ставить DEBUG.
 - Git (s034): `.gitignore` исключает venv/db.sqlite3/media/staticfiles/логи/.env*/.idea. НЕ коммитить
   эти пути. Remote origin = github.com/GNAVA4/site, ветка main.
 - ⚠️ БД=Postgres (s035): для ЛОКАЛЬНОЙ разработки нужен Docker — `docker compose up -d` перед migrate/

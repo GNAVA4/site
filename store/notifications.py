@@ -3,10 +3,13 @@
 Сам заказ уже сохранён в БД (Order/OrderItem) — это лишь уведомление менеджера.
 """
 
+import logging
 from urllib.parse import quote
 
 from django.conf import settings
 from django.core.mail import send_mail
+
+logger = logging.getLogger(__name__)
 
 
 def build_order_text(order):
@@ -51,16 +54,30 @@ def mailto_link(site, order, text):
     return f"mailto:{site.email}?subject={subject}&body={body}"
 
 
-def send_order_email(site, order, text):
-    """Отправляет заказ на почту магазина. В DEBUG уходит в консоль (см. settings)."""
+def send_order_email(site, order, text, admin_url=None):
+    """Серверное уведомление магазина о новом заказе — на site.email.
+    Шлётся при ЛЮБОМ канале (чтобы заказ не потерялся, если клиент не нажмёт ссылку на success).
+    В DEBUG уходит в консоль (см. settings). Не роняет оформление: ошибки логируются.
+    Возвращает True/False — отправлено ли."""
     recipient = site.email
     if not recipient:
+        logger.warning("Заказ #%s: site.email пуст — уведомление магазину не отправлено.", order.pk)
         return False
-    send_mail(
-        subject=f"Новый заказ #{order.pk}",
-        message=text,
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[recipient],
-        fail_silently=True,
-    )
-    return True
+
+    body = [text, "", f"Способ связи с клиентом: {order.get_contact_method_display()}"]
+    if admin_url:
+        body.append(f"Открыть заказ в админке: {admin_url}")
+
+    try:
+        send_mail(
+            subject=f"Новый заказ #{order.pk} — {order.customer_name}",
+            message="\n".join(body),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[recipient],
+            fail_silently=False,
+        )
+        return True
+    except Exception:
+        # Заказ уже сохранён — сбой уведомления не должен ломать оформление.
+        logger.exception("Не удалось отправить уведомление о заказе #%s на %s", order.pk, recipient)
+        return False

@@ -32,7 +32,23 @@ store/         — единственное приложение
 media/         — загруженные изображения (MEDIA_ROOT)
 docker-compose.yml — dev PostgreSQL 17 (порт 5433, volume shop_pgdata)  ← s035
 .env.example   — шаблон переменных окружения (прод)  ← s035
+deploy/        — прод-развёртывание: gunicorn.service, nginx.conf, backup.sh, DEPLOY.md  ← s037
 ```
+
+## Топология прода (ADR 006, s037 — артефакты готовы, не развёрнуто)
+Один Ubuntu-VPS (РФ, 152-ФЗ), всё в `/opt/shop` (системный юзер `shop`):
+```mermaid
+flowchart LR
+  C[Клиент] -->|HTTPS 443| NG[nginx]
+  NG -->|/static/| ST[(staticfiles/)]
+  NG -->|/media/| MD[(media/)]
+  NG -->|proxy 127.0.0.1:8000| GU[gunicorn systemd shop.service]
+  GU --> DJ[Django config.wsgi]
+  DJ --> PG[(PostgreSQL нативный apt)]
+```
+- TLS: Let's Encrypt (certbot --nginx). gunicorn под systemd (3 воркера, EnvironmentFile=/opt/shop/.env).
+- БД на проде — **нативный Postgres (apt)**, НЕ Docker (Docker только для dev). Паритет движка сохранён (ADR 005).
+- Бэкап: `deploy/backup.sh` (pg_dump + media, cron). Обновление кода: git pull + migrate/collectstatic + restart.
 
 ## Поток данных корзины
 session['cart'] = { "<product_id>:<size>": {product_id, size, qty} }
@@ -104,6 +120,12 @@ flowchart LR
 | 2026-06-03 | 033 | Фиксы фильтров поиска: крестик offcanvas (data-bs-target для .offcanvas-lg), убран видимый многострочный {#комментарий#}, поиск без запроса = все товары + фильтры (режимы browse/results/empty) |
 | 2026-06-08 | 034 | Проект под git и запушен на github.com/GNAVA4/site (main); добавлены README.md (установка/запуск/прод) и .gitignore (venv/db/media/staticfiles/логи/.env/.idea исключены). Без изменений в коде приложения |
 | 2026-06-08 | 035 | Прод-Партия 1: SQLite→PostgreSQL (dev Docker:5433 + прод через DATABASE_URL, ADR 005, psycopg 3); WhiteNoise+STORAGES (статика) + gunicorn; .env.example; чистка (TELEGRAM_MANAGER, product_list.html). 43/43 тестов на Postgres, check --deploy 0 issues |
+| 2026-06-08 | 036 | Перенос ДАННЫХ SQLite→Postgres (dumpdata/loaddata 61 объект, PYTHONUTF8=1 от cp1251, reset sequences) — фикс «пустого сайта» после s035. Восстановлены cat9/prod5/img2/orders11, accent #ed7014 |
+| 2026-06-09 | 037 | Деплой-бандл `deploy/` (gunicorn.service, nginx.conf, backup.sh, DEPLOY.md) + ADR 006 (топология прода: nginx+gunicorn/systemd+нативный Postgres+certbot). Артефакты готовы, не развёрнуто |
+| 2026-06-09 | 038 | Админка «быстрые победы»: превью фото в списках (товары/категории/баннеры/галерея), брендирование, массовые действия заказов (статусы) + CSV-экспорт, статистика над заказами по отфильтрованному queryset (выручка без отменённых) |
+| 2026-06-14 | 039 | Роль «Менеджер»: группа прав (миграция 0017, ADR 007) — полное ведение магазина без удаления заказов/категорий и без доступа к пользователям/правам; защита в коде (Order/Category has_delete = superuser-only) |
+| 2026-06-14 | 040 | Авто-уведомление магазина о новом заказе: send_order_email шлётся при ЛЮБОМ канале (не только email) на SiteSettings.email + ссылка на админку; сбой не роняет оформление. Получатель — в админке, отправитель/SMTP — в env |
+| 2026-06-14 | 041 | Предрелизный харднинг: honeypot на форме заказа (forms+checkout.html); SECRET_KEY-гард (raise при дефолтном ключе и DEBUG=False); уровень логов из env (DJANGO_LOG_LEVEL=INFO); раздел «Безопасность» в DEPLOY.md (ufw/ssh/fail2ban/unattended-upgrades/офсайт-бэкап) |
 
 ## Поток оформления заказа (s003)
 ```mermaid

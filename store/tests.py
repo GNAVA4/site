@@ -1,5 +1,6 @@
 from decimal import Decimal
 
+from django.core import mail
 from django.test import TestCase
 from django.urls import reverse
 
@@ -93,6 +94,7 @@ class CheckoutFlowTests(TestCase):
         self.product = make_product(stock=10, price=1000)
         s = SiteSettings.load()
         s.telegram_username = 'shopmanager'
+        s.email = 'shop@example.com'
         s.save()
 
     def test_checkout_creates_order_with_price_snapshot(self):
@@ -159,6 +161,35 @@ class CheckoutFlowTests(TestCase):
     def test_checkout_empty_cart_redirects(self):
         resp = self.client.get(reverse('checkout'))
         self.assertRedirects(resp, reverse('cart_detail'))
+
+    def test_checkout_notifies_shop_by_email_any_channel(self):
+        # Даже когда клиент выбрал НЕ email-канал, магазин получает письмо-уведомление
+        # на site.email (чтобы заказ не потерялся, если клиент не нажмёт ссылку на success).
+        self.client.post(reverse('add_to_cart', args=[self.product.id]),
+                         {'size': 'Стандарт', 'quantity': 1})
+        self.client.post(reverse('checkout'), {
+            'customer_name': 'Ника', 'customer_phone': '+79990000000',
+            'contact_method': 'telegram', 'consent': 'on',
+        })
+        self.assertEqual(len(mail.outbox), 1)
+        msg = mail.outbox[0]
+        self.assertEqual(msg.to, ['shop@example.com'])
+        self.assertIn('Новый заказ', msg.subject)
+        self.assertIn('Ника', msg.subject)
+        self.assertIn('/admin/', msg.body)  # ссылка на заказ в админке
+
+    def test_checkout_honeypot_blocks_bot(self):
+        # Заполненная honeypot-ловушка («website») = бот: заказ не создаётся, письмо не уходит.
+        self.client.post(reverse('add_to_cart', args=[self.product.id]),
+                         {'size': 'Стандарт', 'quantity': 1})
+        resp = self.client.post(reverse('checkout'), {
+            'customer_name': 'Бот', 'customer_phone': '+79990000000',
+            'contact_method': 'telegram', 'consent': 'on',
+            'website': 'http://spam.example',
+        })
+        self.assertEqual(resp.status_code, 200)     # форма не прошла, не редирект
+        self.assertEqual(Order.objects.count(), 0)  # заказ не создан
+        self.assertEqual(len(mail.outbox), 0)       # письмо не ушло
 
     def test_disabled_channel_rejected(self):
         # whatsapp по умолчанию выключен в SiteSettings → форма не примет

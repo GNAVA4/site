@@ -1,7 +1,7 @@
 {
   "project": "my_shop (СтройМаг)",
-  "updated": "2026-06-08",
-  "session": 35,
+  "updated": "2026-06-14",
+  "session": 41,
   "stack": [
     "python-3.14",
     "django-6.0.2",
@@ -24,6 +24,11 @@
     "first_commit": "2db2b1d (s034; amend убрал Co-Authored-By: Claude по просьбе юзера, force-push)",
     "policy": "НЕ добавлять Co-Authored-By: Claude в коммиты этого репо",
     "ignored": "venv, db.sqlite3, media/, staticfiles/, *.log, .env*, .idea/"
+  },
+  "auth": {
+    "superuser": "rus (из SQLite-переноса; changepassword при необходимости)",
+    "manager_role": "группа «Менеджеры» (миграция 0017, ADR 007): ведёт магазин, БЕЗ удаления заказов/категорий и БЕЗ auth. Завести: Пользователи→Добавить→is_staff+группа",
+    "code_guards": "Order/Category has_delete_permission = superuser-only"
   },
   "open_bugs": [],
   "open_tasks": [
@@ -56,8 +61,9 @@
     }
   ],
   "verified_by_user": "2026-06-03: «визуально всё вроде норм» — поиск/поле в шапке/моб.шапка, скидки (товар/категория), редизайн (до s031)",
-  "last_change": "прод-Партия 1: SQLite→PostgreSQL (dev Docker:5433 + прод через DATABASE_URL, ADR 005), psycopg3, WhiteNoise+STORAGES, gunicorn, .env.example, убран TELEGRAM_MANAGER + product_list.html; 43/43 тестов на Postgres, check --deploy 0 issues",
+  "last_change": "s041: предрелизный харднинг — honeypot анти-спам на форме заказа, SECRET_KEY-гард (отказ старта с дефолтным ключом при DEBUG=False), уровень логов из env (DJANGO_LOG_LEVEL=INFO), раздел «Безопасность» в DEPLOY.md (ufw/ssh/fail2ban/unattended-upgrades/офсайт-бэкап). check 0, 45/45 тестов",
   "key_files": {
+    "deploy/": "прод-бандл: gunicorn.service (systemd), nginx.conf (прокси+static/media), backup.sh (pg_dump+media cron), DEPLOY.md (пошагово Ubuntu VPS + обновление). ADR 006",
     "docker-compose.yml": "dev PostgreSQL 17 (хост-порт 5433, volume shop_pgdata); docker compose up -d",
     "config/settings.py": "DATABASES из DATABASE_URL (urllib.parse, дефолт=dev-контейнер); WhiteNoiseMiddleware+STORAGES(manifest); прод-SECURE_* при DEBUG=False",
     ".env.example": "шаблон прод-переменных (SECRET_KEY/DEBUG/ALLOWED_HOSTS/CSRF/DATABASE_URL/EMAIL_*)",
@@ -66,8 +72,8 @@
     "store/models.py": "Product.effective_discount_* (товар > категория); DiscountTarget на модуле; ProductImage(галерея)+Product.gallery",
     "store/search.py": "поиск: нормализация (Python), rapidfuzz-Левенштейн, ранжирование, AND + «похожие»",
     "store/static/store/theme.css": "дизайн-система (переменные + компоненты, +.header-search/.search-bar)",
-    "store/admin.py": "товары/категории (скидки в списке) + Order(статистика) + SiteSettings(singleton)",
+    "store/admin.py": "товары/категории/баннеры (превью фото в списках) + Order(статистика по фильтру, массовые действия статусов, CSV-экспорт) + SiteSettings(singleton); брендирование site_header (s038)",
     "store/cart.py": "Cart: add/set_qty/change/change_size/remove; sum_* по current_*",
-    ".project-brain/decisions/": "adr_001 заказы/SiteSettings; adr_002 трекинг; adr_003 поиск Python; adr_004 скидка категории; adr_005 Postgres-паритет"
+    ".project-brain/decisions/": "adr_001 заказы/SiteSettings; adr_002 трекинг; adr_003 поиск Python; adr_004 скидка категории; adr_005 Postgres-паритет; adr_006 топология прода; adr_007 роль Менеджер"
   }
 }

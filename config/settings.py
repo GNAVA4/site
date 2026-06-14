@@ -27,13 +27,19 @@ def _env_bool(name, default=False):
 
 # SECURITY WARNING: keep the secret key used in production secret!
 # Дефолтный ключ — ТОЛЬКО для локальной разработки. На проде задайте DJANGO_SECRET_KEY.
-SECRET_KEY = os.environ.get(
-    'DJANGO_SECRET_KEY',
-    'django-insecure-_te=&je+blv_$+$%sx5oi42kp1f=$6vmjhh0n!mjlme_1((swg',
-)
+_INSECURE_SECRET_KEY = 'django-insecure-_te=&je+blv_$+$%sx5oi42kp1f=$6vmjhh0n!mjlme_1((swg'
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', _INSECURE_SECRET_KEY)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = _env_bool('DJANGO_DEBUG', default=True)
+
+# На проде нельзя стартовать с дефолтным небезопасным ключом — иначе сессии/CSRF подделываемы.
+if not DEBUG and SECRET_KEY == _INSECURE_SECRET_KEY:
+    from django.core.exceptions import ImproperlyConfigured
+    raise ImproperlyConfigured(
+        'Задайте уникальный DJANGO_SECRET_KEY в окружении: с DEBUG=False '
+        'использовать дефолтный django-insecure ключ нельзя.'
+    )
 
 # Список хостов через запятую: DJANGO_ALLOWED_HOSTS="example.com,www.example.com"
 ALLOWED_HOSTS = [h.strip() for h in os.environ.get('DJANGO_ALLOWED_HOSTS', '').split(',') if h.strip()]
@@ -199,7 +205,9 @@ if not DEBUG:
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-# === ЛОГИРОВАНИЕ (Вставь в конец settings.py) ===
+# === ЛОГИРОВАНИЕ ===
+# Уровень логов из окружения. Прод — INFO/WARNING (по умолчанию), dev может задать DEBUG.
+LOG_LEVEL = os.environ.get('DJANGO_LOG_LEVEL', 'INFO').upper()
 
 LOGGING = {
     'version': 1,
@@ -216,12 +224,12 @@ LOGGING = {
     },
     'handlers': {
         'console': {
-            'level': 'DEBUG',
+            'level': LOG_LEVEL,
             'class': 'logging.StreamHandler',
             'formatter': 'simple',
         },
         'file': {
-            'level': 'DEBUG',
+            'level': LOG_LEVEL,
             'class': 'logging.FileHandler',
             'filename': BASE_DIR / 'debug.log',  # абсолютный путь, не зависит от CWD
             'formatter': 'verbose',
@@ -230,12 +238,12 @@ LOGGING = {
     'loggers': {
         'django': {
             'handlers': ['console', 'file'],
-            'level': 'INFO', # Системные сообщения Django
+            'level': LOG_LEVEL,  # Системные сообщения Django
             'propagate': True,
         },
         'store': {  # Логи нашего приложения
             'handlers': ['console', 'file'],
-            'level': 'DEBUG',
+            'level': LOG_LEVEL,
             'propagate': True,
         },
     },

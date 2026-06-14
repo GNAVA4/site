@@ -1,0 +1,26 @@
+# systemd-юнит для gunicorn (Django-приложение СтройМаг).
+# Установка:  sudo cp deploy/gunicorn.service /etc/systemd/system/shop.service
+#             sudo systemctl daemon-reload && sudo systemctl enable --now shop
+# Логи:       journalctl -u shop -f
+[Unit]
+Description=gunicorn daemon for СтройМаг (Django)
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+User=shop
+Group=shop
+WorkingDirectory=/opt/shop
+# Прод-переменные окружения (DATABASE_URL, DJANGO_SECRET_KEY, ...). Формат KEY=VALUE.
+EnvironmentFile=/opt/shop/.env
+ExecStart=/opt/shop/venv/bin/gunicorn config.wsgi:application \
+    --bind 127.0.0.1:8000 \
+    --workers 3 \
+    --timeout 60 \
+    --access-logfile - \
+    --error-logfile -
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

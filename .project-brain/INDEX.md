@@ -1,5 +1,5 @@
 # MEMORY INDEX — my_shop
-_Updated: 2026-06-08 session 035_
+_Updated: 2026-06-14 session 041_
 
 ## By topic
 | Topic | Files |
@@ -14,7 +14,8 @@ _Updated: 2026-06-08 session 035_
 | тесты | session_003, store/tests.py |
 | деплой/безопасность | session_001, session_003, CONTEXT |
 | git/README/публикация | session_034, README.md, .gitignore (remote github.com/GNAVA4/site) |
-| прод-подготовка/БД/деплой | session_035, adr_005, docker-compose.yml, .env.example, settings.py (DATABASE_URL/WhiteNoise/gunicorn) |
+| прод-подготовка/БД/деплой | session_035 (Postgres/WhiteNoise/gunicorn, adr_005), session_037 (deploy/ бандл, adr_006), docker-compose.yml, .env.example, settings.py, deploy/DEPLOY.md |
+| перенос данных БД | session_036, insight_2026-06-08_dumpdata-cp1251-windows (dumpdata/loaddata, PYTHONUTF8) |
 | архитектура | architecture.md |
 | поиск товаров | session_026, store/search.py, adr_003, insight_2026-06-02_sqlite-cyrillic-icase |
 | витрина/фильтры/пагинация | session_031+032, store/listing.py, _browse_controls (простые), _pager |
@@ -60,6 +61,12 @@ _Updated: 2026-06-08 session 035_
 | 033 | 2026-06-03 | фиксы фильтров поиска: крестик offcanvas (data-bs-target), убран видимый {#многострочный комментарий#}, поиск без запроса = все товары + фильтры (режимы browse/results/empty) | _search_filters, views.search, search.html, tests |
 | 034 | 2026-06-08 | README (установка/запуск) + .gitignore; git init + push на github.com/GNAVA4/site (main, 2db2b1d, без Claude в соавторах); проверка секретов (db/media/venv/логи не в репо) | README.md (НОВ), .gitignore (НОВ), git |
 | 035 | 2026-06-08 | Прод-Партия 1: SQLite→PostgreSQL (dev Docker:5433 + прод DATABASE_URL, ADR 005, psycopg3); WhiteNoise+STORAGES+gunicorn; .env.example; чистка (TELEGRAM_MANAGER, product_list.html). 43/43 на Postgres, check --deploy 0 issues | docker-compose.yml (НОВ), settings.py, requirements.txt, .env.example (НОВ), README.md, adr_005 |
+| 036 | 2026-06-08 | Перенос ДАННЫХ SQLite→Postgres (dumpdata/loaddata, 61 объект; PYTHONUTF8=1 от cp1251-бага; reset sequences). Восстановлены cat9/prod5/img2/orders11, accent #ed7014. Фикс «пустого сайта» после s035 | (данные в БД), insight cp1251, session |
+| 037 | 2026-06-09 | Деплой-бандл deploy/ (gunicorn.service, nginx.conf, backup.sh, DEPLOY.md) + ADR 006 (топология прода: nginx+gunicorn/systemd+нативный Postgres+certbot). Готово, не развёрнуто | deploy/* (НОВ), adr_006, session |
+| 038 | 2026-06-09 | Админка «быстрые победы»: превью фото (товары/категории/баннеры/галерея), брендирование, массовые действия заказов (статусы) + CSV-экспорт, статистика по отфильтрованным заказам (выручка без отменённых). check 0, 43/43, смоук 200 | store/admin.py, admin/.../order/change_list.html |
+| 039 | 2026-06-14 | Роль «Менеджер»: группа с 24 правами (миграция 0017, ADR 007) — ведёт магазин без удаления заказов/категорий и без доступа к пользователям; защита в коде (Order/Category has_delete=superuser). Суперюзер rus | store/migrations/0017_manager_group.py (НОВ), store/admin.py, adr_007 |
+| 040 | 2026-06-14 | Авто-уведомление магазина о новом заказе на email при ЛЮБОМ канале (было: только email-канал) + ссылка на админку; не роняет оформление. Получатель=SiteSettings.email, отправитель=DEFAULT_FROM_EMAIL/SMTP. check 0, 44/44 | store/notifications.py, store/views.py, store/tests.py |
+| 041 | 2026-06-14 | Предрелизный харднинг: honeypot анти-спам формы заказа; SECRET_KEY-гард (отказ старта с дефолтным ключом при DEBUG=False); уровень логов из env (DJANGO_LOG_LEVEL); раздел Безопасность в DEPLOY.md (ufw/ssh/fail2ban/...). check 0, 45/45 | forms.py, checkout.html, settings.py, .env.example, tests.py, deploy/DEPLOY.md |
 
 ## Decisions (ADRs)
 | # | Title | Status |
@@ -69,6 +76,8 @@ _Updated: 2026-06-08 session 035_
 | 003 | Поиск на стороне Python (не SQL), rapidfuzz-Левенштейн | active |
 | 004 | Скидка на категорию + приоритет товарной скидки (без суммирования) | active |
 | 005 | PostgreSQL и в dev (Docker), и на проде — паритет сред | active |
+| 006 | Топология прода: Ubuntu VPS, nginx+gunicorn/systemd+нативный Postgres+certbot | active |
+| 007 | Роль «Менеджер»: ограниченный доступ в админку (без удаления заказов/категорий, без auth) | active |
 
 ## Plans
 | # | Title | Status |
@@ -88,3 +97,4 @@ _Updated: 2026-06-08 session 035_
 | insight_2026-05-31_cdn-jsdelivr-ru-block | jsdelivr/Google Fonts режутся в РФ → стили не применяются; брать cdnjs |
 | insight_2026-05-31_adblock-banner-path | ad-blocker режет пути/классы со словом «banner» → нейтральные имена (promo) |
 | insight_2026-06-02_sqlite-cyrillic-icase | SQLite icontains/lower() не для кириллицы → регистр сворачивать в Python |
+| insight_2026-06-08_dumpdata-cp1251-windows | смена движка БД требует переноса данных; dumpdata на рус.Windows пишет cp1251 → PYTHONUTF8=1 |

@@ -9,6 +9,13 @@ class OrderForm(forms.ModelForm):
         error_messages={'required': 'Без согласия на обработку персональных данных оформить заказ нельзя.'},
     )
 
+    # Honeypot-ловушка от спам-ботов: поле скрыто от людей (CSS в шаблоне), они его не заполняют.
+    # Бот, заполняющий все поля формы, выдаёт себя — заказ отклоняется.
+    website = forms.CharField(
+        required=False, label='',
+        widget=forms.TextInput(attrs={'tabindex': '-1', 'autocomplete': 'off'}),
+    )
+
     class Meta:
         model = Order
         fields = ['customer_name', 'customer_phone', 'contact_method', 'comment']
@@ -41,6 +48,12 @@ class OrderForm(forms.ModelForm):
         self.fields['contact_method'].widget = forms.RadioSelect(choices=choices)
         if choices:
             self.fields['contact_method'].initial = choices[0][0]
+
+    def clean_website(self):
+        # Заполненная ловушка = бот.
+        if self.cleaned_data.get('website'):
+            raise forms.ValidationError('Спам-защита: поле должно оставаться пустым.')
+        return ''
 
     def clean_customer_phone(self):
         """В шаблоне +7 показан статичным префиксом, поэтому пользователь вводит

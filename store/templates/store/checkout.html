@@ -10,6 +10,11 @@
     <div class="col-lg-7">
         <form method="POST" class="surface p-4">
             {% csrf_token %}
+            {# Honeypot-ловушка для ботов: скрыто от людей, не заполнять #}
+            <div aria-hidden="true" tabindex="-1" style="position:absolute;left:-9999px;top:-9999px;height:0;width:0;overflow:hidden;">
+                <label>Оставьте это поле пустым</label>
+                {{ form.website }}
+            </div>
             {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
 
             <div class="mb-3">
